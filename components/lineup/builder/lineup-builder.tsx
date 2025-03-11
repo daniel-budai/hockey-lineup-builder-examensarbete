@@ -20,9 +20,17 @@ import { CreateTeamModal } from "@/components/lineup/builder/team/create-team-mo
 import { usePlayers } from "@/hooks/state/usePlayers";
 import { useModals } from "@/hooks/ui/useModal";
 import { useDragAndDrop } from "@/hooks/ui/useDragAndDrop";
+import { useLocalStorage } from "@/hooks/storage/useLocalStorage";
 
 import { HockeyRink } from "@/components/lineup/builder/rink/hockey-rink";
 import { LineTab } from "@/components/lineup/builder/rink/line-tab";
+
+const emptyLineup: LineupData = {
+  line1: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
+  line2: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
+  line3: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
+  line4: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
+};
 
 export function LineupBuilder() {
   const {
@@ -41,12 +49,11 @@ export function LineupBuilder() {
     setPlayerDetailOpen,
   } = useModals();
 
-  const [lineup, setLineup] = useState<LineupData>({
-    line1: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-    line2: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-    line3: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-    line4: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-  });
+  // Use local storage for lineup persistence
+  const [lineup, setLineup] = useLocalStorage<LineupData>(
+    "hockey-lineup",
+    emptyLineup
+  );
   const [activeTab, setActiveTab] = useState<string>("line1");
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
@@ -64,22 +71,19 @@ export function LineupBuilder() {
     setActiveTab,
   });
 
-  // Add this effect to log state changes
   useEffect(() => {
     console.log("LineupBuilder - addPlayerOpen:", addPlayerOpen);
   }, [addPlayerOpen]);
 
-  // Add this effect to debug modal state
   useEffect(() => {
     console.log("Modal state changed:", { playerDetailOpen, selectedPlayer });
   }, [playerDetailOpen, selectedPlayer]);
 
-  // Create a combined handler for viewing player details
   const handleViewDetails = (player: Player) => {
     console.log("LineupBuilder handleViewDetails called", { player });
-    // Set the selected player
+
     handleViewPlayerDetails(player);
-    // Open the modal
+
     setPlayerDetailOpen(true);
   };
 
