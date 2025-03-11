@@ -165,7 +165,7 @@ export function LineupBuilder() {
         />
       )}
 
-      {/* <CreateTeamModal open={createTeamOpen} onOpenChange={setCreateTeamOpen} /> */}
+      <CreateTeamModal open={createTeamOpen} onOpenChange={setCreateTeamOpen} />
 
       <Toaster richColors />
     </div>
