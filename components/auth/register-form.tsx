@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-export function LoginForm() {
+export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -20,30 +20,35 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
+      // api requuuest för ny user
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      if (result?.error) {
-        toast.error("Invalid credentials");
-        setIsLoading(false);
-        return;
-      }
-
-      toast.success("You have been logged in successfully.");
-      router.push("/dashboard");
-      router.refresh();
+      toast.success("Account created successfully. Please sign in.");
+      router.push("/login");
     } catch (error) {
       console.error(error);
       toast.error("Something went wrong");
+    } finally {
       setIsLoading(false);
     }
   }
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name" className="text-slate-300">
+          Name
+        </Label>
+        <Input
+          id="name"
+          type="text"
+          placeholder="John Doe"
+          required
+          className="rounded-lg bg-[#0f172a]/80 border-[#334155] focus-visible:ring-[#64748b] text-white placeholder:text-slate-500"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="email" className="text-slate-300">
           Email
@@ -59,18 +64,9 @@ export function LoginForm() {
         />
       </div>
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password" className="text-slate-300">
-            Password
-          </Label>
-          <Button
-            variant="link"
-            className="h-auto p-0 text-sm text-slate-400 hover:text-white"
-            type="button"
-          >
-            Forgot password?
-          </Button>
-        </div>
+        <Label htmlFor="password" className="text-slate-300">
+          Password
+        </Label>
         <Input
           id="password"
           type="password"
@@ -88,10 +84,10 @@ export function LoginForm() {
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
+            Creating account...
           </>
         ) : (
-          "Sign in"
+          "Create account"
         )}
       </Button>
     </form>
