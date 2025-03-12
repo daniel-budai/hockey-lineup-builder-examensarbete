@@ -1,6 +1,5 @@
 // components/profile/account-information.tsx
-import { useState } from "react";
-import { toast } from "sonner";
+import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,33 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit, Save, X } from "lucide-react";
 import InfoItem from "@/components/profile/info-item";
 
-interface AccountInformationProps {
-  user: {
-    name: string;
-    email: string;
-    joinedDate: string;
-  };
-}
+export default function AccountInformation() {
+  const {
+    profile,
+    isLoading,
+    isEditing,
+    editForm,
+    startEditing,
+    cancelEditing,
+    updateField,
+    saveChanges,
+  } = useProfile();
 
-export default function AccountInformation({ user }: AccountInformationProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [userData, setUserData] = useState({
-    name: user.name,
-    email: user.email,
-  });
-
-  // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setUserData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle save profile
-  const handleSaveProfile = () => {
-    // Here you would save the data to your backend
-    toast.success("Your profile information has been saved successfully");
-    setIsEditing(false);
-  };
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Card className="bg-[#1e293b]/80 border-[#334155] text-white">
@@ -50,7 +37,7 @@ export default function AccountInformation({ user }: AccountInformationProps) {
             variant="outline"
             size="sm"
             className="border-[#334155] text-white hover:bg-[#0f172a]"
-            onClick={() => setIsEditing(true)}
+            onClick={startEditing}
           >
             <Edit className="h-4 w-4 mr-2" />
             Edit
@@ -61,13 +48,7 @@ export default function AccountInformation({ user }: AccountInformationProps) {
               variant="outline"
               size="sm"
               className="border-[#334155] text-white hover:bg-[#0f172a]"
-              onClick={() => {
-                setIsEditing(false);
-                setUserData({
-                  name: user.name,
-                  email: user.email,
-                });
-              }}
+              onClick={cancelEditing}
             >
               <X className="h-4 w-4 mr-2" />
               Cancel
@@ -75,7 +56,7 @@ export default function AccountInformation({ user }: AccountInformationProps) {
             <Button
               size="sm"
               className="bg-white hover:bg-slate-100 text-[#0f172a]"
-              onClick={handleSaveProfile}
+              onClick={saveChanges}
             >
               <Save className="h-4 w-4 mr-2" />
               Save
@@ -85,37 +66,38 @@ export default function AccountInformation({ user }: AccountInformationProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {isEditing ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={userData.name}
-                    onChange={handleChange}
-                    className="bg-[#0f172a]/50 border-[#334155] text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={userData.email}
-                    onChange={handleChange}
-                    className="bg-[#0f172a]/50 border-[#334155] text-white"
-                  />
-                </div>
-              </div>
-            </>
-          ) : (
+          {!isEditing ? (
+            // View mode
             <div className="space-y-4">
-              <InfoItem label="Full Name" value={userData.name} />
-              <InfoItem label="Email Address" value={userData.email} />
-              <InfoItem label="Member Since" value={user.joinedDate} />
+              <InfoItem label="Full Name" value={profile?.name || ""} />
+              <InfoItem label="Email Address" value={profile?.email || ""} />
+              <InfoItem
+                label="Member Since"
+                value={profile?.joinedDate || ""}
+              />
+            </div>
+          ) : (
+            // Edit mode
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  value={editForm.name || ""}
+                  onChange={(e) => updateField("name", e.target.value)}
+                  className="bg-[#0f172a]/50 border-[#334155] text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={editForm.email || ""}
+                  onChange={(e) => updateField("email", e.target.value)}
+                  className="bg-[#0f172a]/50 border-[#334155] text-white"
+                />
+              </div>
             </div>
           )}
         </div>

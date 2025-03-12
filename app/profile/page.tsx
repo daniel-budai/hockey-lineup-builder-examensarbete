@@ -1,18 +1,29 @@
 "use client";
 
+import { useEffect } from "react";
+import { useProfile } from "@/hooks/useProfile";
 import ProfileSidebar from "@/components/profile/profile-sidebar";
 import AccountInformation from "@/components/profile/account-information";
 import { MainNav } from "@/components/main-nav";
-
-// Mock user data - replace with your auth system's user data
-const mockUser = {
-  name: "Alex Johnson",
-  email: "alex@example.com",
-  joinedDate: "January 15, 2023",
-  avatarUrl: "https://ui.shadcn.com/avatars/01.png",
-};
+import { Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
+  const { profile, isLoading, fetchProfile, updateProfile } = useProfile();
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!profile) return null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
       {/* Header */}
@@ -42,11 +53,11 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Sidebar */}
-          <ProfileSidebar user={mockUser} />
+          <ProfileSidebar user={profile} />
 
           {/* Main Content Area */}
           <div className="md:col-span-3 space-y-6">
-            <AccountInformation user={mockUser} />
+            <AccountInformation user={profile} onSave={updateProfile} />
           </div>
         </div>
       </main>
