@@ -20,14 +20,30 @@ export function RegisterForm() {
     setIsLoading(true);
 
     try {
-      // api requuuest för ny user
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to register");
+      }
 
       toast.success("Account created successfully. Please sign in.");
       router.push("/login");
     } catch (error) {
       console.error(error);
-      toast.error("Something went wrong");
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
     } finally {
       setIsLoading(false);
     }
