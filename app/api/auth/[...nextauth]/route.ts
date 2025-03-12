@@ -1,6 +1,9 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
+import { connectToDatabase } from "@/lib/mongodb";
+import User from "@/models/User";
+import { verifyPassword } from "@/lib/password";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,8 +14,34 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log(credentials); //fix databas här
-        return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Please provide email and password");
+        }
+
+        await connectToDatabase();
+
+        // Find user by email
+        const user = await User.findOne({ email: credentials.email });
+
+        if (!user) {
+          throw new Error("No user found with this email");
+        }
+
+        // Check password
+        const isValid = await verifyPassword(
+          credentials.password,
+          user.password
+        );
+
+        if (!isValid) {
+          throw new Error("Invalid password");
+        }
+
+        return {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+        };
       },
     }),
   ],
