@@ -19,16 +19,50 @@ export function useLineup() {
     setActiveTab(line);
   }
 
-  function saveLineup(teamId: string, teamName: string) {
-    const lineupData = {
-      teamId,
-      lineup,
-      updatedAt: new Date().toISOString(),
-    };
+  async function saveLineup(teamId: string, teamName: string) {
+    try {
+      if (!teamId) {
+        toast.error("No team selected");
+        return;
+      }
 
-    localStorage.setItem(`lineup-${teamId}`, JSON.stringify(lineupData));
+      // Get the current lineup state from localStorage
+      const currentLineup = localStorage.getItem("hockey-lineup");
+      const parsedLineup = currentLineup
+        ? JSON.parse(currentLineup)
+        : emptyLineup;
 
-    toast.success(`${teamName} lineup has been saved successfully.`);
+      const lineupToSave = {
+        teamId,
+        name: `${teamName} Lineup - ${new Date().toLocaleDateString()}`,
+        // Use the parsed lineup data
+        line1: parsedLineup.line1,
+        line2: parsedLineup.line2,
+        line3: parsedLineup.line3,
+        line4: parsedLineup.line4,
+      };
+
+      console.log("Current lineup from localStorage:", parsedLineup);
+      console.log("Lineup being saved:", lineupToSave);
+
+      const response = await fetch("/api/lineup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(lineupToSave),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save lineup");
+      }
+
+      toast.success(`${teamName} lineup has been saved successfully.`);
+    } catch (error) {
+      console.error("Error saving lineup:", error);
+      toast.error("Failed to save lineup. Please try again.");
+    }
   }
 
   function loadLineup(teamId: string) {
