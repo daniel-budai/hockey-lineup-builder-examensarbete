@@ -14,6 +14,11 @@ const TeamSchema = new mongoose.Schema({
   primaryColor: String,
   secondaryColor: String,
   logoUrl: String,
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: [true, "User ID is required"],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

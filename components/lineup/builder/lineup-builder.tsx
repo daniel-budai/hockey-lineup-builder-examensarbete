@@ -15,7 +15,7 @@ import { PlayerCard } from "@/components/lineup/builder/roster/player-card";
 
 import { AddPlayerModal } from "@/components/lineup/modals/add-player-modal";
 import { PlayerDetailModal } from "@/components/lineup/modals/player-details-modal";
-import { CreateTeamModal } from "@/components/lineup/builder/team/create-team-modal";
+import { CreateTeamModal } from "@/components/lineup/modals/create-team-modal";
 
 import { usePlayers } from "@/hooks/state/usePlayers";
 import { useModals } from "@/hooks/ui/useModal";
