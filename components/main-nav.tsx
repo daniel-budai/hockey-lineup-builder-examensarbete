@@ -25,7 +25,7 @@ export function MainNav({ className }: MainNavProps) {
     },
     {
       name: "Team Management",
-      href: "/teams",
+      href: "/management",
       icon: Users,
     },
   ];
