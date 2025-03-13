@@ -34,7 +34,7 @@ export function ActionButtons({
         Create Team
       </Button>
       <Button
-        onClick={() => saveLineup(currentTeam.id, currentTeam.name)}
+        onClick={() => saveLineup(currentTeam._id, currentTeam.name)}
         className="bg-white hover:bg-slate-100 text-[#0f172a] shadow-md hover:shadow-lg transition-all rounded-full"
       >
         <Save className="mr-2 h-4 w-4" />

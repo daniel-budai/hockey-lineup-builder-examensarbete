@@ -97,6 +97,7 @@ export function useDragHandlers({
         newLineup[targetLine as keyof LineupData][sourcePosition as Position] =
           activeStates.activePlayer;
       }
+      console.log("Setting lineup after tab drop:", newLineup);
       setLineup(newLineup);
       setActiveTab(targetLine);
     } else if (overId.includes("-")) {
@@ -111,6 +112,7 @@ export function useDragHandlers({
       } else {
         newLineup[targetLine as keyof LineupData][targetPosition as Position] =
           activeStates.activePlayer;
+        console.log("Setting lineup after position drop:", newLineup);
         setLineup(newLineup);
       }
     }
