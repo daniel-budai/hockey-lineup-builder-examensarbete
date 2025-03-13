@@ -35,11 +35,31 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create lineup with user email as identifier
-    const lineup = await Lineup.create({
-      ...data,
-      userId: user._id, // Use the actual MongoDB ObjectId
+    // Check if a lineup already exists for this team
+    const existingLineup = await Lineup.findOne({
+      userId: user._id,
+      teamId: data.teamId,
     });
+
+    let lineup;
+    if (existingLineup) {
+      // Update existing lineup
+      lineup = await Lineup.findByIdAndUpdate(
+        existingLineup._id,
+        {
+          ...data,
+          userId: user._id,
+          updatedAt: new Date(),
+        },
+        { new: true } // Return the updated document
+      );
+    } else {
+      // Create new lineup
+      lineup = await Lineup.create({
+        ...data,
+        userId: user._id,
+      });
+    }
 
     return NextResponse.json(lineup);
   } catch (error) {
