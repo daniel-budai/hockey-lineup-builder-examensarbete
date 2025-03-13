@@ -57,6 +57,16 @@ export function LineupBuilder() {
   const [activeTab, setActiveTab] = useState<string>("line1");
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
+  // Add this effect to log state changes
+  useEffect(() => {
+    console.log("LocalStorage lineup state:", lineup);
+  }, [lineup]);
+
+  const handleLineupChange = (newLineup: LineupData) => {
+    console.log("Updating lineup with:", newLineup);
+    setLineup(newLineup);
+  };
+
   const {
     activePlayer,
     sensors,
@@ -66,7 +76,7 @@ export function LineupBuilder() {
     previewLineup,
   } = useDragAndDrop({
     lineup,
-    setLineup,
+    setLineup: handleLineupChange, // Use our new handler
     activeTab,
     setActiveTab,
   });
@@ -78,6 +88,10 @@ export function LineupBuilder() {
   useEffect(() => {
     console.log("Modal state changed:", { playerDetailOpen, selectedPlayer });
   }, [playerDetailOpen, selectedPlayer]);
+
+  useEffect(() => {
+    console.log("Lineup state in LineupBuilder:", lineup);
+  }, [lineup]);
 
   const handleViewDetails = (player: Player) => {
     console.log("LineupBuilder handleViewDetails called", { player });

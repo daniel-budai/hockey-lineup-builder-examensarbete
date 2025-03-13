@@ -1,28 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import type { Lineup } from "@/types/lineup";
+// import { format } from "date-fns";
 
 interface LineupListProps {
   teamId: string;
 }
 
 export function LineupList({ teamId }: LineupListProps) {
-  const [lineups, setLineups] = useState<Lineup[]>([]);
+  const [lineups, setLineups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchLineups() {
-      setIsLoading(true);
       try {
+        console.log("Fetching lineups for teamId:", teamId); // Debug log
         const response = await fetch(`/api/lineup?teamId=${teamId}`);
-        if (!response.ok) throw new Error("Failed to fetch lineups");
+
+        // Log the response status
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch lineups");
+        }
+
         const data = await response.json();
-        setLineups(data.lineups);
+        console.log("Fetched lineups:", data); // Debug log
+        setLineups(data);
+        setError(null);
       } catch (error) {
-        toast.error("Failed to load lineups");
-        console.error(error);
+        console.error("Error details:", error);
+        setError(
+          error instanceof Error ? error.message : "Failed to fetch lineups"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -33,28 +45,38 @@ export function LineupList({ teamId }: LineupListProps) {
     }
   }, [teamId]);
 
-  if (isLoading) {
-    return <div className="text-gray-500">Loading lineups...</div>;
-  }
-
-  if (!lineups || lineups.length === 0) {
-    return (
-      <div className="text-gray-500 text-center py-4">
-        No lineups created yet. Create your first lineup!
-      </div>
-    );
-  }
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!lineups.length) return <div>No lineups saved for this team yet.</div>;
 
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+    <div className="space-y-4">
       {lineups.map((lineup) => (
         <div
           key={lineup._id}
-          className="p-4 border rounded-lg hover:bg-gray-50 transition cursor-pointer"
+          className="bg-slate-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
         >
-          <div className="font-medium">{lineup.name}</div>
-          <div className="text-sm text-gray-500">
-            Last updated: {new Date(lineup.updatedAt).toLocaleDateString()}
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-semibold">{lineup.name}</h3>
+            <span className="text-sm text-gray-500">
+              {/* {format(new Date(lineup.createdAt), "MMM d, yyyy")} */}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            {["line1", "line2", "line3", "line4"].map((line) => (
+              <div key={line} className="text-sm">
+                <p className="font-medium capitalize">{line}</p>
+                <div className="text-gray-600">
+                  {Object.entries(lineup[line])
+                    .filter(([_, player]) => player)
+                    .map(([position, player]) => (
+                      <p key={position}>
+                        {position}: {player.name} #{player.number}
+                      </p>
+                    ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ))}

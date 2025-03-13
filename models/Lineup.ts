@@ -54,4 +54,7 @@ const LineupSchema = new mongoose.Schema({
   },
 });
 
+// Add a compound unique index
+LineupSchema.index({ userId: 1, teamId: 1 }, { unique: true });
+
 export default mongoose.models.Lineup || mongoose.model("Lineup", LineupSchema);
