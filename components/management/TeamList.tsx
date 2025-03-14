@@ -9,7 +9,7 @@ interface TeamListProps {
 export function TeamList({ teams, currentTeam, onSelectTeam }: TeamListProps) {
   if (!teams || teams.length === 0) {
     return (
-      <div className="text-gray-500 text-center py-4">
+      <div className="text-slate-300 text-center py-4">
         No teams created yet. Create your first team!
       </div>
     );
@@ -23,12 +23,12 @@ export function TeamList({ teams, currentTeam, onSelectTeam }: TeamListProps) {
           onClick={() => onSelectTeam(team)}
           className={`w-full text-left p-3 rounded-lg transition ${
             currentTeam?._id === team._id
-              ? "bg-blue-100 border border-blue-500"
-              : "hover:bg-gray-100 border border-transparent"
+              ? "bg-[#0f172a] border border-none"
+              : "hover:bg-[#0f172a]/50 border border-transparent"
           }`}
         >
-          <div className="font-medium">{team.name}</div>
-          <div className="text-sm text-gray-500">{team.abbreviation}</div>
+          <div className="font-medium text-white">{team.name}</div>
+          <div className="text-sm text-slate-300">{team.abbreviation}</div>
         </button>
       ))}
     </div>
