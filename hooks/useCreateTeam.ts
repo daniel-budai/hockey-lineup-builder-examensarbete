@@ -1,12 +1,8 @@
-import { useState } from "react";
 import { toast } from "sonner";
 
 export function useCreateTeam() {
-  const [isCreating, setIsCreating] = useState(false);
-
-  const handleCreateTeam = async (teamData) => {
+  const handleCreateTeam = async (teamData:) => {
     try {
-      setIsCreating(true);
       const response = await fetch("/api/teams", {
         method: "POST",
         headers: {
@@ -15,26 +11,20 @@ export function useCreateTeam() {
         body: JSON.stringify(teamData),
       });
 
-      const data = await response.json();
+      if (!response.ok) throw new Error("Failed to create team");
 
+      const data = await response.json();
       if (data.success) {
         toast.success("Team created successfully!");
         return true;
-      } else {
-        toast.error(data.error || "Failed to create team");
-        return false;
       }
+      return false;
     } catch (error) {
-      toast.error("An error occurred while creating the team");
+      toast.error("Failed to create team");
       console.error(error);
       return false;
-    } finally {
-      setIsCreating(false);
     }
   };
 
-  return {
-    isCreating,
-    handleCreateTeam,
-  };
+  return { handleCreateTeam };
 }

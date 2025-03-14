@@ -5,7 +5,7 @@ import {
   convertWeight,
   calculateAge,
 } from "@/lib/utils/conversions";
-import { validatePlayerForm } from "@/lib/validation/playerForm";
+import { playerFormSchema, PlayerFormData } from "@/schemas/player.schema";
 
 export interface PlayerFormData {
   firstName: string;
@@ -133,9 +133,21 @@ export function usePlayerForm() {
   };
 
   const validateForm = () => {
-    const newErrors = validatePlayerForm(formData);
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const result = playerFormSchema.safeParse(formData);
+
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path.join(".");
+        newErrors[path] = issue.message;
+      });
+
+      setErrors(newErrors);
+      return false;
+    }
+
+    setErrors({});
+    return true;
   };
 
   const resetForm = () => {

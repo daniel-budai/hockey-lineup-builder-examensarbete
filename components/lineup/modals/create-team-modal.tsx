@@ -22,6 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { countries } from "@/data/countries";
 import type { Team } from "@/types/team";
 import { toast } from "sonner";
+import { teamSchema } from "@/schemas/team.schema";
 
 interface CreateTeamModalProps {
   open: boolean;
@@ -75,27 +76,38 @@ export function CreateTeamModal({
 
   // Validate form
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+    // Create an object that matches your schema structure
+    const teamData = {
+      name,
+      abbreviation: abbreviation.toUpperCase(),
+      city: city || "",
+      country: country || "",
+      foundedYear: foundedYear ? Number(foundedYear) : undefined,
+      arena: arena || "",
+      division: division || "",
+      conference: conference || "",
+      primaryColor,
+      secondaryColor,
+    };
 
-    if (!name.trim()) newErrors.name = "Team name is required";
+    // Validate with Zod
+    const result = teamSchema.safeParse(teamData);
 
-    if (!abbreviation.trim()) {
-      newErrors.abbreviation = "Team abbreviation is required";
-    } else if (abbreviation.length > 3) {
-      newErrors.abbreviation = "Abbreviation must be 3 characters or less";
+    if (!result.success) {
+      // Convert Zod errors to your existing error format
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        // Map the path to your field names
+        const field = issue.path[0] as string;
+        newErrors[field] = issue.message;
+      });
+
+      setErrors(newErrors);
+      return false;
     }
 
-    if (
-      foundedYear &&
-      (isNaN(Number(foundedYear)) ||
-        Number(foundedYear) < 1800 ||
-        Number(foundedYear) > new Date().getFullYear())
-    ) {
-      newErrors.foundedYear = `Year must be between 1800 and ${new Date().getFullYear()}`;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   // Handle form submission - now directly creates the team
