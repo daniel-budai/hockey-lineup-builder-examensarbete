@@ -5,7 +5,7 @@ import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
 
-import { Header } from "@/components/lineup/builder/header";
+import { Header } from "@/components/layout";
 import { TeamHeader } from "@/components/lineup/builder/team/team-header";
 import { TeamSelector } from "@/components/lineup/builder/team/team-selector";
 import { ActionButtons } from "@/components/lineup/builder/team/action-buttons";

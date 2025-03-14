@@ -1,10 +1,15 @@
 // @/components/lineup/builder/header/mobile-nav.tsx
-import { HopIcon, Menu, User, Users } from "lucide-react";
+"use client";
+
+import { HopIcon, Menu, User, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NavLink } from "./nav-link";
+import { useAuth } from "@/hooks/use-auth";
 
 export function MobileNav() {
+  const { user, isAuthenticated, logout } = useAuth();
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -27,9 +32,35 @@ export function MobileNav() {
             </div>
           </div>
           <nav className="flex flex-col p-4 space-y-2">
-            <NavLink href="/dashboard" icon={HopIcon} label="Lineup Builder" />
-            <NavLink href="/profile" icon={User} label="My Profile" />
-            <NavLink href="/teams" icon={Users} label="Team Management" />
+            {isAuthenticated ? (
+              <>
+                <NavLink
+                  href="/dashboard"
+                  icon={HopIcon}
+                  label="Lineup Builder"
+                />
+                <NavLink href="/profile" icon={User} label="My Profile" />
+                <NavLink
+                  href="/management"
+                  icon={Users}
+                  label="Team Management"
+                />
+                <NavLink
+                  href="#"
+                  icon={LogOut}
+                  label="Sign Out"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    logout();
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <NavLink href="/login" icon={User} label="Sign In" />
+                <NavLink href="/register" icon={Users} label="Sign Up" />
+              </>
+            )}
           </nav>
         </div>
       </SheetContent>
