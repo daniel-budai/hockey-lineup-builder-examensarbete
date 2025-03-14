@@ -1,7 +1,7 @@
 // @/components/lineup/builder/header/index.tsx
 import { HopIcon } from "lucide-react"; // Menu, User, Users
 import { MobileNav } from "./mobile-nav";
-import { MainNav } from "@/components/main-nav";
+import { MainNav } from "@/components/layout/main-nav";
 
 export function Header() {
   return (

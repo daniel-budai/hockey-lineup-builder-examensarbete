@@ -1,6 +1,10 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight, HopIcon as Hockey, Shield } from "lucide-react";
+import { MainNav } from "@/components/layout/main-nav";
+import { MobileNav } from "@/components/layout/mobile-nav";
 
 export default function Home() {
   return (
@@ -13,20 +17,16 @@ export default function Home() {
               Hockey Lineup Builder
             </span>
           </div>
-          <nav className="flex gap-4 sm:gap-6">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-slate-300 hover:text-white hover:underline underline-offset-4"
-            >
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="text-sm font-medium text-slate-300 hover:text-white hover:underline underline-offset-4"
-            >
-              Register
-            </Link>
-          </nav>
+
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <MobileNav />
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <MainNav />
+          </div>
         </div>
       </header>
       <main className="flex-1">
