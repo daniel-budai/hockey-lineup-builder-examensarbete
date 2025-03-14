@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
 export function useCreateTeam() {
-  const handleCreateTeam = async (teamData:) => {
+  const handleCreateTeam = async (teamData) => {
     try {
       const response = await fetch("/api/teams", {
         method: "POST",
