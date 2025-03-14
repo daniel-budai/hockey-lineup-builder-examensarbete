@@ -3,6 +3,7 @@ import Team from "@/models/Team";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { teamSchema } from "@/schemas/team.schema";
 
 export async function POST(request: Request) {
   try {
@@ -13,9 +14,25 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
 
-    const data = await request.json();
+    const body = await request.json();
+
+    // Validate with Zod
+    const result = teamSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          issues: result.error.issues,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Create team in database
     const team = await Team.create({
-      ...data,
+      ...result.data,
       userId: session.user.id,
       createdAt: new Date(),
       updatedAt: new Date(),

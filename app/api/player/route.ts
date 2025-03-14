@@ -3,6 +3,7 @@ import Player from "@/models/Player";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { playerSchema } from "@/schemas/player.schema";
 
 export async function GET(request: Request) {
   try {
@@ -32,18 +33,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await request.json();
+    const body = await request.json();
 
-    if (!data.teamId) {
+    // Validate with Zod
+    const result = playerSchema.safeParse(body);
+
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Team ID is required" },
+        {
+          success: false,
+          error: "Validation failed",
+          issues: result.error.issues,
+        },
         { status: 400 }
       );
     }
 
+    // Process the validated data
+    const playerData = result.data;
+
     await connectToDatabase();
     const player = await Player.create({
-      ...data,
+      ...playerData,
       userId: session.user.id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -51,8 +62,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, player });
   } catch (error) {
+    console.error("Player creation failed:", error);
     return NextResponse.json(
-      { error: "Failed to create player" },
+      { success: false, error: "Failed to create player" },
       { status: 500 }
     );
   }

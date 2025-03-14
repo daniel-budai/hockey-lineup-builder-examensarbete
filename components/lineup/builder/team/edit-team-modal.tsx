@@ -21,6 +21,9 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { countries } from "@/data/countries";
 import type { Team } from "@/types/team";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { playerSchema, PlayerInput } from "@/schemas/player.schema";
 
 interface EditTeamModalProps {
   open: boolean;
@@ -48,6 +51,27 @@ export function EditTeamModal({
   const [primaryColor, setPrimaryColor] = useState(team.primaryColor);
   const [secondaryColor, setSecondaryColor] = useState(team.secondaryColor);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors: formErrors },
+    reset,
+  } = useForm<PlayerInput>({
+    resolver: zodResolver(playerSchema),
+    defaultValues: {
+      name: team.name,
+      number: "",
+      positions: [],
+      nationality: team.country,
+      age: team.foundedYear,
+      stats: {
+        goals: 0,
+        assists: 0,
+        plusMinus: 0,
+      },
+    },
+  });
 
   // Update form when team changes
   useEffect(() => {
@@ -99,7 +123,7 @@ export function EditTeamModal({
   };
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmitForm = (data: PlayerInput) => {
     if (!validateForm()) return;
 
     const updatedTeam: Omit<Team, "createdAt" | "updatedAt"> = {
@@ -351,7 +375,7 @@ export function EditTeamModal({
             Cancel
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={handleSubmit(handleSubmitForm)}
             className="bg-white hover:bg-slate-100 text-[#0f172a]"
           >
             Save Changes

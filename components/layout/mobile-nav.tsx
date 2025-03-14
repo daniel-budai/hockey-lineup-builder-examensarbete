@@ -8,7 +8,7 @@ import { NavLink } from "./nav-link";
 import { useAuth } from "@/hooks/use-auth";
 
 export function MobileNav() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth(); //user,
 
   return (
     <Sheet>

@@ -7,16 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema, RegisterInput } from "@/schemas/auth.schema";
 
 export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const router = useRouter();
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  async function onSubmit(data: RegisterInput) {
     setIsLoading(true);
 
     try {
@@ -26,15 +39,33 @@ export function RegisterForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
-          email,
-          password,
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          confirmPassword: data.confirmPassword,
         }),
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to register");
+        const errorData = await response.json();
+        console.error("Registration error details:", errorData);
+
+        // More detailed logging of validation issues
+        if (errorData.issues && errorData.issues.length > 0) {
+          console.error(
+            "Validation issues:",
+            JSON.stringify(errorData.issues, null, 2)
+          );
+          // Display the first validation error as a toast
+          const firstIssue = errorData.issues[0];
+          toast.error(
+            `Validation error: ${firstIssue.path.join(".")} - ${
+              firstIssue.message
+            }`
+          );
+        }
+
+        throw new Error(errorData.error || "Failed to register");
       }
 
       toast.success("Account created successfully. Please sign in.");
@@ -50,7 +81,7 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="name" className="text-slate-300">
           Name
@@ -59,11 +90,14 @@ export function RegisterForm() {
           id="name"
           type="text"
           placeholder="John Doe"
-          required
-          className="rounded-lg bg-[#0f172a]/80 border-[#334155] focus-visible:ring-[#64748b] text-white placeholder:text-slate-500"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          className={`rounded-lg bg-[#0f172a]/80 border-[#334155] focus-visible:ring-[#64748b] text-white placeholder:text-slate-500 ${
+            errors.name ? "border-red-500" : ""
+          }`}
+          {...register("name")}
         />
+        {errors.name && (
+          <p className="text-red-500 text-sm">{errors.name.message}</p>
+        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="email" className="text-slate-300">
@@ -73,11 +107,14 @@ export function RegisterForm() {
           id="email"
           type="email"
           placeholder="name@example.com"
-          required
-          className="rounded-lg bg-[#0f172a]/80 border-[#334155] focus-visible:ring-[#64748b] text-white placeholder:text-slate-500"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          className={`rounded-lg bg-[#0f172a]/80 border-[#334155] focus-visible:ring-[#64748b] text-white placeholder:text-slate-500 ${
+            errors.email ? "border-red-500" : ""
+          }`}
+          {...register("email")}
         />
+        {errors.email && (
+          <p className="text-red-500 text-sm">{errors.email.message}</p>
+        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="password" className="text-slate-300">
@@ -86,11 +123,32 @@ export function RegisterForm() {
         <Input
           id="password"
           type="password"
-          required
-          className="rounded-lg bg-[#0f172a]/80 border-[#334155] focus-visible:ring-[#64748b] text-white placeholder:text-slate-500"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          className={`rounded-lg bg-[#0f172a]/80 border-[#334155] focus-visible:ring-[#64748b] text-white placeholder:text-slate-500 ${
+            errors.password ? "border-red-500" : ""
+          }`}
+          {...register("password")}
         />
+        {errors.password && (
+          <p className="text-red-500 text-sm">{errors.password.message}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword" className="text-slate-300">
+          Confirm Password
+        </Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          className={`rounded-lg bg-[#0f172a]/80 border-[#334155] focus-visible:ring-[#64748b] text-white placeholder:text-slate-500 ${
+            errors.confirmPassword ? "border-red-500" : ""
+          }`}
+          {...register("confirmPassword")}
+        />
+        {errors.confirmPassword && (
+          <p className="text-red-500 text-sm">
+            {errors.confirmPassword.message}
+          </p>
+        )}
       </div>
       <Button
         type="submit"
