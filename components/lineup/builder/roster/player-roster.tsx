@@ -59,7 +59,6 @@ export function PlayerRoster({
     </ScrollArea>
   );
 }
-
 interface DraggablePlayerCardProps {
   player: Player;
   onViewDetails: (player: Player) => void;

@@ -15,12 +15,34 @@ interface RosterContainerProps {
 }
 
 export function RosterContainer({
-  players,
+  players: allPlayers,
   onViewDetails,
   onRemovePlayer,
 }: RosterContainerProps) {
   const { searchQuery, setSearchQuery, filterTab, setFilterTab } = usePlayers();
   const { lineup } = useLineup();
+
+  const filteredPlayers = allPlayers.filter((player) => {
+    const matchesSearch =
+      player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      player.positions?.some((pos) =>
+        pos.toLowerCase().includes(searchQuery.toLowerCase())
+      ) ||
+      (player.nationality &&
+        player.nationality.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      player.number.toString().includes(searchQuery);
+
+    if (!matchesSearch) return false;
+
+    if (filterTab === "all") return true;
+    if (filterTab === "forwards")
+      return player.positions?.some((pos) => ["LW", "C", "RW"].includes(pos));
+    if (filterTab === "defense")
+      return player.positions?.some((pos) => ["LD", "RD"].includes(pos));
+    if (filterTab === "goalies") return player.positions?.includes("G");
+
+    return true;
+  });
 
   return (
     <div className="bg-[#1e293b]/80 rounded-xl shadow-lg border border-white/5 overflow-hidden backdrop-blur-sm">
@@ -85,18 +107,10 @@ export function RosterContainer({
 
         <div className="p-4">
           <PlayerRoster
-            players={players}
+            players={filteredPlayers}
             onViewDetails={onViewDetails}
             onRemovePlayer={onRemovePlayer}
-          >
-            {(player) => (
-              <PlayerCard
-                player={player}
-                onViewDetails={onViewDetails}
-                onRemovePlayer={onRemovePlayer}
-              />
-            )}
-          </PlayerRoster>
+          />
         </div>
       </Tabs>
     </div>
