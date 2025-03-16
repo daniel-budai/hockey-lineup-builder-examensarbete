@@ -10,13 +10,13 @@ interface HockeyRinkProps {
 
 export function HockeyRink({ line, lineNumber }: HockeyRinkProps) {
   return (
-    <div className="hockey-rink w-full max-w-[700px] mx-auto aspect-[3/4] bg-[#e2e8f0] relative border-2 border-white overflow-hidden rounded-[40px]">
+    <div className="hockey-rink w-full max-w-[100%] sm:max-w-[700px] mx-auto aspect-[3/4] bg-[#e2e8f0] relative border-2 border-white overflow-hidden rounded-[40px] sm:rounded-[30px] xs:rounded-[20px]">
       {/* Goal creases */}
-      <div className="absolute left-1/2 top-0 h-12 w-24 border-2 border-[#334155] rounded-b-full -translate-x-1/2" />
-      <div className="absolute left-1/2 bottom-0 h-12 w-24 border-2 border-[#334155] rounded-t-full -translate-x-1/2" />
+      <div className="absolute left-1/2 top-0 h-8 sm:h-10 md:h-12 w-16 sm:w-20 md:w-24 border-2 border-[#334155] rounded-b-full -translate-x-1/2" />
+      <div className="absolute left-1/2 bottom-0 h-8 sm:h-10 md:h-12 w-16 sm:w-20 md:w-24 border-2 border-[#334155] rounded-t-full -translate-x-1/2" />
 
       {/* Player positions - Forward line */}
-      <div className="absolute top-[20%] inset-x-0 flex items-center justify-around px-8">
+      <div className="absolute top-[20%] inset-x-0 flex items-center justify-around px-4 sm:px-6 md:px-8">
         <PositionDroppable
           id={`line${lineNumber}-LW`}
           position="LW"
@@ -35,7 +35,7 @@ export function HockeyRink({ line, lineNumber }: HockeyRinkProps) {
       </div>
 
       {/* Defense line */}
-      <div className="absolute top-[50%] inset-x-0 flex items-center justify-around px-20">
+      <div className="absolute top-[50%] inset-x-0 flex items-center justify-around px-8 sm:px-12 md:px-20">
         <PositionDroppable
           id={`line${lineNumber}-LD`}
           position="LD"
@@ -74,7 +74,7 @@ function PositionDroppable({ id, position, player }: PositionDroppableProps) {
   return (
     <div
       ref={setNodeRef}
-      className={`relative flex h-24 w-24 items-center justify-center rounded-full ${
+      className={`relative flex h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 items-center justify-center rounded-full ${
         isOver
           ? "bg-[#cbd5e1] border-4 border-[#334155] shadow-lg"
           : "bg-white/90 border-4 border-[#94a3b8]"
@@ -83,7 +83,7 @@ function PositionDroppable({ id, position, player }: PositionDroppableProps) {
       {player ? (
         <DraggablePlayerCard id={id} player={player} />
       ) : (
-        <div className="text-center font-bold text-lg text-[#0f172a]">
+        <div className="text-center font-bold text-xs sm:text-sm md:text-lg text-[#0f172a]">
           {position}
         </div>
       )}
