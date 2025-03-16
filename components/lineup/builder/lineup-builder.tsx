@@ -4,6 +4,7 @@ import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
+import { RefreshCw } from "lucide-react"; // Add this import for the reset icon
 
 import { Header } from "@/components/layout";
 import { TeamHeader } from "@/components/lineup/builder/team/team-header";
@@ -101,24 +102,45 @@ export function LineupBuilder() {
     setPlayerDetailOpen(true);
   };
 
+  // Add this function to reset the lineup
+  const handleResetLineup = () => {
+    console.log("Resetting lineup to empty state");
+
+    // Create a fresh copy of the empty lineup to ensure a new reference
+    const freshEmptyLineup = JSON.parse(JSON.stringify(emptyLineup));
+
+    // Update both the local storage and the React state
+    setLineup(freshEmptyLineup);
+
+    // Force a re-render if needed
+    // This is a bit of a hack, but can help diagnose if it's a rendering issue
+    setActiveTab((prevTab) => {
+      // Toggle and then immediately toggle back to force a re-render
+      const tempTab = prevTab === "line1" ? "line2" : "line1";
+      setTimeout(() => setActiveTab(prevTab), 0);
+      return tempTab;
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white overflow-x-hidden">
       <Header />
 
       {/* Team Selector and Actions */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 max-w-full">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 sm:space-y-4 md:space-y-0">
           <TeamHeader />
           <ActionButtons
             onAddPlayer={() => setAddPlayerOpen(true)}
             onCreateTeam={() => setCreateTeamOpen(true)}
+            onResetLineup={handleResetLineup}
           />
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
-        <div className="flex flex-col space-y-6">
+      <main className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 max-w-full overflow-x-hidden">
+        <div className="flex flex-col space-y-4 sm:space-y-6">
           <DndContext
             sensors={sensors}
             onDragStart={handleDragStart}
@@ -126,10 +148,10 @@ export function LineupBuilder() {
             onDragEnd={handleDragEnd}
             modifiers={[restrictToWindowEdges]}
           >
-            <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-              <div className="bg-[#1e293b]/80 rounded-xl shadow-lg border border-white/5 overflow-hidden backdrop-blur-sm">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-[1fr] lg:grid-cols-[2fr_1fr]">
+              <div className="bg-[#1e293b]/80 rounded-lg sm:rounded-xl shadow-lg border border-white/5 overflow-hidden backdrop-blur-sm">
                 {/* Line tabs */}
-                <div className="flex border-b border-[#334155]/50">
+                <div className="flex border-b border-[#334155]/50 overflow-x-auto">
                   {Object.keys(lineup).map((line, index) => (
                     <LineTab
                       key={line}
@@ -143,7 +165,7 @@ export function LineupBuilder() {
                 </div>
 
                 {/* Rink */}
-                <div className="p-6">
+                <div className="p-2 sm:p-4 md:p-6">
                   <HockeyRink
                     line={lineup[activeTab as keyof LineupData]}
                     lineNumber={Number.parseInt(activeTab.replace("line", ""))}
