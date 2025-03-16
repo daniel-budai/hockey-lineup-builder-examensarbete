@@ -4,6 +4,7 @@ import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
+import { RefreshCw } from "lucide-react"; // Add this import for the reset icon
 
 import { Header } from "@/components/layout";
 import { TeamHeader } from "@/components/lineup/builder/team/team-header";
@@ -101,6 +102,26 @@ export function LineupBuilder() {
     setPlayerDetailOpen(true);
   };
 
+  // Add this function to reset the lineup
+  const handleResetLineup = () => {
+    console.log("Resetting lineup to empty state");
+
+    // Create a fresh copy of the empty lineup to ensure a new reference
+    const freshEmptyLineup = JSON.parse(JSON.stringify(emptyLineup));
+
+    // Update both the local storage and the React state
+    setLineup(freshEmptyLineup);
+
+    // Force a re-render if needed
+    // This is a bit of a hack, but can help diagnose if it's a rendering issue
+    setActiveTab((prevTab) => {
+      // Toggle and then immediately toggle back to force a re-render
+      const tempTab = prevTab === "line1" ? "line2" : "line1";
+      setTimeout(() => setActiveTab(prevTab), 0);
+      return tempTab;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
       <Header />
@@ -112,6 +133,7 @@ export function LineupBuilder() {
           <ActionButtons
             onAddPlayer={() => setAddPlayerOpen(true)}
             onCreateTeam={() => setCreateTeamOpen(true)}
+            onResetLineup={handleResetLineup} // Add this prop
           />
         </div>
       </div>
