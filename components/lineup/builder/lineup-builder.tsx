@@ -22,6 +22,7 @@ import { usePlayers } from "@/hooks/state/usePlayers";
 import { useModals } from "@/hooks/ui/useModal";
 import { useDragAndDrop } from "@/hooks/ui/useDragAndDrop";
 import { useLocalStorage } from "@/hooks/storage/useLocalStorage";
+import { useLineup } from "@/hooks/state/useLineup";
 
 import { HockeyRink } from "@/components/lineup/builder/rink/hockey-rink";
 import { LineTab } from "@/components/lineup/builder/rink/line-tab";
@@ -51,10 +52,7 @@ export function LineupBuilder() {
   } = useModals();
 
   // Use local storage for lineup persistence
-  const [lineup, setLineup] = useLocalStorage<LineupData>(
-    "hockey-lineup",
-    emptyLineup
-  );
+  const { lineup, setLineup } = useLineup();
   const [activeTab, setActiveTab] = useState<string>("line1");
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
@@ -94,34 +92,44 @@ export function LineupBuilder() {
     console.log("Lineup state in LineupBuilder:", lineup);
   }, [lineup]);
 
-  const handleViewDetails = (player: Player) => {
-    console.log("LineupBuilder handleViewDetails called", { player });
-
-    handleViewPlayerDetails(player);
-
-    setPlayerDetailOpen(true);
-  };
-
-  // Add this function to reset the lineup
+  // Define the missing handleResetLineup function
   const handleResetLineup = () => {
-    console.log("Resetting lineup to empty state");
+    // Reset the lineup to empty state
+    const freshEmptyLineup = {
+      line1: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
+      line2: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
+      line3: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
+      line4: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
+    };
 
-    // Create a fresh copy of the empty lineup to ensure a new reference
-    const freshEmptyLineup = JSON.parse(JSON.stringify(emptyLineup));
-
-    // Update both the local storage and the React state
     setLineup(freshEmptyLineup);
-
-    // Force a re-render if needed
-    // This is a bit of a hack, but can help diagnose if it's a rendering issue
-    setActiveTab((prevTab) => {
-      // Toggle and then immediately toggle back to force a re-render
-      const tempTab = prevTab === "line1" ? "line2" : "line1";
-      setTimeout(() => setActiveTab(prevTab), 0);
-      return tempTab;
-    });
   };
 
+  // Create our combined player removal function
+  const removePlayerCompletely = (playerId: string) => {
+    // Remove from roster
+    handleRemovePlayer(playerId);
+
+    // Remove from lineup - create a new object to ensure state change is detected
+    const newLineup = JSON.parse(JSON.stringify(lineup));
+    let changed = false;
+
+    Object.keys(newLineup).forEach((lineKey) => {
+      Object.keys(newLineup[lineKey]).forEach((position) => {
+        if (newLineup[lineKey][position]?.id === playerId) {
+          newLineup[lineKey][position] = null;
+          changed = true;
+        }
+      });
+    });
+
+    // Only update lineup if changes were made
+    if (changed) {
+      setLineup(newLineup);
+    }
+  };
+
+  // Then pass this function to RosterContainer instead of handleRemovePlayer
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white overflow-x-hidden">
       <Header />
@@ -175,8 +183,8 @@ export function LineupBuilder() {
 
               <RosterContainer
                 players={players}
-                onViewDetails={handleViewDetails}
-                onRemovePlayer={handleRemovePlayer}
+                onViewDetails={handleViewPlayerDetails}
+                onRemovePlayer={removePlayerCompletely}
               />
             </div>
 
