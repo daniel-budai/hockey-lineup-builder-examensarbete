@@ -105,7 +105,21 @@ export function LineupBuilder() {
   // Add this function to reset the lineup
   const handleResetLineup = () => {
     console.log("Resetting lineup to empty state");
-    setLineup(emptyLineup);
+
+    // Create a fresh copy of the empty lineup to ensure a new reference
+    const freshEmptyLineup = JSON.parse(JSON.stringify(emptyLineup));
+
+    // Update both the local storage and the React state
+    setLineup(freshEmptyLineup);
+
+    // Force a re-render if needed
+    // This is a bit of a hack, but can help diagnose if it's a rendering issue
+    setActiveTab((prevTab) => {
+      // Toggle and then immediately toggle back to force a re-render
+      const tempTab = prevTab === "line1" ? "line2" : "line1";
+      setTimeout(() => setActiveTab(prevTab), 0);
+      return tempTab;
+    });
   };
 
   return (
