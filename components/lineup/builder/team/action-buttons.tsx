@@ -1,18 +1,19 @@
 // @/components/lineup/builder/team/action-buttons.tsx
-import { Plus, Save } from "lucide-react";
+import { Plus, Save, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-// import { useModals } from "@/hooks/ui/useModal";
 import { useLineup } from "@/hooks/state/useLineup";
 import { useTeam } from "@/hooks/state/useTeam";
 
 interface ActionButtonsProps {
   onAddPlayer: () => void;
   onCreateTeam: () => void;
+  onResetLineup: () => void;
 }
 
 export function ActionButtons({
   onAddPlayer,
   onCreateTeam,
+  onResetLineup,
 }: ActionButtonsProps) {
   const { saveLineup } = useLineup();
   const { currentTeam } = useTeam();
@@ -39,6 +40,13 @@ export function ActionButtons({
       >
         <Save className="mr-2 h-4 w-4" />
         Save Lineup
+      </Button>
+      <Button
+        onClick={onResetLineup}
+        className="bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all rounded-full"
+      >
+        <RefreshCw className="mr-2 h-4 w-4" />
+        Reset Lineup
       </Button>
     </div>
   );
