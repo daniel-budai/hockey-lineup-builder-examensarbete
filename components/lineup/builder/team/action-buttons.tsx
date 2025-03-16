@@ -19,7 +19,7 @@ export function ActionButtons({
   const { currentTeam } = useTeam();
 
   return (
-    <div className="flex space-x-3">
+    <div className="grid grid-cols-2 sm:flex gap-2 sm:space-x-3">
       <Button
         onClick={onAddPlayer}
         className="bg-[#1e293b] hover:bg-[#334155] text-white shadow-md hover:shadow-lg transition-all rounded-full"
