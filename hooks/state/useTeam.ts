@@ -20,6 +20,14 @@ export function useTeam() {
 
       if (data.success) {
         setTeams(data.teams);
+        const savedTeamId = localStorage.getItem("selectedTeamId");
+        if (savedTeamId) {
+          const savedTeam = data.teams.find((team) => team._id === savedTeamId);
+          if (savedTeam) {
+            setCurrentTeam(savedTeam);
+            return;
+          }
+        }
         if (data.teams.length > 0 && !currentTeam) {
           setCurrentTeam(data.teams[0]);
         }
@@ -36,6 +44,7 @@ export function useTeam() {
 
   const handleSelectTeam = (team: Team) => {
     setCurrentTeam(team);
+    localStorage.setItem("selectedTeamId", team._id);
   };
 
   const handleCreateTeam = async (
