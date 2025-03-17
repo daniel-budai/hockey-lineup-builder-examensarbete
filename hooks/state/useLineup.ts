@@ -12,14 +12,16 @@ const emptyLineup: LineupData = {
 export function useLineup() {
   const [lineup, setLineup] = useState<LineupData>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("hockey-lineup");
+      const teamId = localStorage.getItem("selectedTeamId");
+      const saved = localStorage.getItem(`hockey-lineup-${teamId}`);
       return saved ? JSON.parse(saved) : emptyLineup;
     }
     return emptyLineup;
   });
 
   useEffect(() => {
-    localStorage.setItem("hockey-lineup", JSON.stringify(lineup));
+    const teamId = localStorage.getItem("selectedTeamId");
+    localStorage.setItem(`hockey-lineup-${teamId}`, JSON.stringify(lineup));
   }, [lineup]);
 
   const [activeTab, setActiveTab] = useState<string>("line1");
@@ -36,7 +38,7 @@ export function useLineup() {
         return;
       }
 
-      const currentLineup = localStorage.getItem("hockey-lineup");
+      const currentLineup = localStorage.getItem(`hockey-lineup-${teamId}`);
       const parsedLineup = currentLineup
         ? JSON.parse(currentLineup)
         : emptyLineup;

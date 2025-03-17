@@ -6,7 +6,8 @@ import type { Player } from "@/types/lineup";
 export function usePlayers() {
   const [players, setPlayers] = useState<Player[]>(() => {
     if (typeof window !== "undefined") {
-      const savedPlayers = localStorage.getItem("hockey-players");
+      const teamId = localStorage.getItem("selectedTeamId");
+      const savedPlayers = localStorage.getItem(`hockey-players-${teamId}`);
       if (savedPlayers) {
         try {
           return JSON.parse(savedPlayers);
@@ -19,7 +20,8 @@ export function usePlayers() {
   });
 
   useEffect(() => {
-    localStorage.setItem("hockey-players", JSON.stringify(players));
+    const teamId = localStorage.getItem("selectedTeamId");
+    localStorage.setItem(`hockey-players-${teamId}`, JSON.stringify(players));
   }, [players]);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +59,9 @@ export function usePlayers() {
         if (player) usedPlayerIds.add(player.id);
       });
     });
+
+    console.log("Players before filtering:", players);
+    console.log("Used player IDs:", usedPlayerIds);
 
     let filteredPlayers = players
       .filter((player) => !usedPlayerIds.has(player.id))
