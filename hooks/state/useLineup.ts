@@ -1,5 +1,4 @@
-// @/hooks/state/useLineup.ts
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import type { LineupData, Position, Player } from "@/types/lineup";
 
@@ -11,7 +10,18 @@ const emptyLineup: LineupData = {
 };
 
 export function useLineup() {
-  const [lineup, setLineup] = useState<LineupData>(emptyLineup);
+  const [lineup, setLineup] = useState<LineupData>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("hockey-lineup");
+      return saved ? JSON.parse(saved) : emptyLineup;
+    }
+    return emptyLineup;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("hockey-lineup", JSON.stringify(lineup));
+  }, [lineup]);
+
   const [activeTab, setActiveTab] = useState<string>("line1");
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
@@ -26,7 +36,6 @@ export function useLineup() {
         return;
       }
 
-      // Get the current lineup state from localStorage
       const currentLineup = localStorage.getItem("hockey-lineup");
       const parsedLineup = currentLineup
         ? JSON.parse(currentLineup)
@@ -35,7 +44,6 @@ export function useLineup() {
       const lineupToSave = {
         teamId,
         name: `${teamName} Lineup - ${new Date().toLocaleDateString()}`,
-        // Use the parsed lineup data
         line1: parsedLineup.line1,
         line2: parsedLineup.line2,
         line3: parsedLineup.line3,
