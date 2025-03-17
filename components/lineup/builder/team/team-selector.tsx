@@ -30,7 +30,7 @@ export function TeamSelector({
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="border-[#334155] text-white hover:bg-[#1e293b] rounded-full shadow-sm"
+          className="!bg-[#1e293b] !border-[#334155] !text-white hover:!bg-[#0f172a] rounded-full shadow-sm w-full"
         >
           {currentTeam ? (
             <div className="flex items-center">

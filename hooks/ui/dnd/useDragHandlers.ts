@@ -117,6 +117,22 @@ export function useDragHandlers({
       }
     }
 
+    if (over) {
+      const [lineId, position] = over.id.toString().split("-");
+
+      if (position === "G" && activeStates.activePlayer) {
+        const updatedLineup = { ...newLineup };
+
+        Object.keys(updatedLineup).forEach((line) => {
+          updatedLineup[line].G = activeStates.activePlayer;
+        });
+
+        setLineup(updatedLineup);
+      } else {
+        setLineup(newLineup);
+      }
+    }
+
     activeStates.resetActiveStates();
     setCurrentHoveredTab(null);
   }
