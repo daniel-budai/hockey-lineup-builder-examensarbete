@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react"; //useEffect,
 import { Toaster } from "sonner";
+import type { LineupData, LineNumber } from "@/types/lineup";
+import type { Position } from "@/types/positions";
 
 import { Header } from "@/components/layout";
 import { TeamHeader } from "./team/team-header";
 import { ActionButtons } from "./team/action-buttons";
-import { RinkContainer } from "./rink/rink-container";
 import { RosterContainer } from "./roster/roster-container";
 import { HockeyRink } from "./rink/hockey-rink";
 import { LineTabs } from "./line-tabs";
@@ -44,10 +45,10 @@ export function LineupBuilder() {
   } = useModals();
 
   const { lineup, setLineup } = useLineup();
-  const [activeTab, setActiveTab] = useState<string>("line1");
-  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<LineNumber>("line1");
+  const [hoveredTab] = useState<LineNumber | null>(null);
 
-  const handleLineupChange = (newLineup: LineupData) => {
+  const handleLineupChange = (newLineup: LineupData): void => {
     setLineup(newLineup);
   };
 
@@ -61,20 +62,22 @@ export function LineupBuilder() {
     lineup,
     setLineup: handleLineupChange,
     activeTab,
-    setActiveTab,
+    setActiveTab: (value: LineNumber) => {
+      setActiveTab(value);
+    },
   });
 
-  const handleResetLineup = () => {
+  const handleResetLineup = (): void => {
     setLineup(emptyLineup);
   };
 
-  const removePlayerCompletely = (playerId: string) => {
+  const removePlayerCompletely = (playerId: string): void => {
     handleRemovePlayer(playerId);
     const newLineup = structuredClone(lineup);
     let changed = false;
 
-    Object.keys(newLineup).forEach((lineKey) => {
-      Object.keys(newLineup[lineKey]).forEach((position) => {
+    (Object.keys(newLineup) as LineNumber[]).forEach((lineKey) => {
+      (Object.keys(newLineup[lineKey]) as Position[]).forEach((position) => {
         if (newLineup[lineKey][position]?.id === playerId) {
           newLineup[lineKey][position] = null;
           changed = true;
@@ -117,13 +120,13 @@ export function LineupBuilder() {
                   lineup={lineup}
                   activeTab={activeTab}
                   hoveredTab={hoveredTab}
-                  onTabChange={setActiveTab}
+                  onTabChange={(tab: LineNumber) => setActiveTab(tab)}
                 />
 
                 <div className="p-2 sm:p-4 md:p-6">
                   <HockeyRink
-                    line={lineup[activeTab as keyof LineupData]}
-                    lineNumber={Number.parseInt(activeTab.replace("line", ""))}
+                    line={lineup[activeTab]}
+                    lineNumber={parseInt(activeTab.replace("line", ""), 10)}
                   />
                 </div>
               </div>
@@ -142,9 +145,13 @@ export function LineupBuilder() {
         addPlayerOpen={addPlayerOpen}
         playerDetailOpen={playerDetailOpen}
         createTeamOpen={createTeamOpen}
-        setAddPlayerOpen={setAddPlayerOpen}
-        setPlayerDetailOpen={setPlayerDetailOpen}
-        setCreateTeamOpen={setCreateTeamOpen}
+        setAddPlayerOpen={setAddPlayerOpen as Dispatch<SetStateAction<boolean>>}
+        setPlayerDetailOpen={
+          setPlayerDetailOpen as Dispatch<SetStateAction<boolean>>
+        }
+        setCreateTeamOpen={
+          setCreateTeamOpen as Dispatch<SetStateAction<boolean>>
+        }
         selectedPlayer={selectedPlayer}
         handleAddPlayer={handleAddPlayer}
         handleRemovePlayer={handleRemovePlayer}

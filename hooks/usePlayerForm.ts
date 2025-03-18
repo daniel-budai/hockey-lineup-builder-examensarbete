@@ -1,11 +1,12 @@
 import { useState } from "react";
-import type { Player } from "@/types/lineup";
+import type { Player } from "@/types/player";
 import {
   convertHeight,
   convertWeight,
   calculateAge,
 } from "@/lib/utils/conversions";
-import { playerFormSchema, PlayerFormData } from "@/schemas/player.schema";
+import { playerFormSchema } from "@/schemas/player.schema";
+import type { Position } from "@/types/positions";
 
 export interface PlayerFormData {
   firstName: string;
@@ -123,7 +124,7 @@ export function usePlayerForm() {
 
   const handlePositionChange = (position: string, checked: boolean) => {
     if (checked) {
-      updateField("positions", [...formData.positions, position]);
+      updateField("positions", [...formData.positions, position as Position]);
     } else {
       updateField(
         "positions",
@@ -176,9 +177,9 @@ export function usePlayerForm() {
     return {
       name: `${formData.firstName} ${formData.lastName}`,
       number: Number.parseInt(formData.number),
-      age: formData.age ? Number.parseInt(formData.age) : undefined,
+      age: formData.age ? Number.parseInt(formData.age) : 0,
       nationality: formData.nationality,
-      positions: formData.positions,
+      positions: formData.positions as Position[],
       stats: {},
       height: {
         cm: formData.heightCm ? Number.parseInt(formData.heightCm) : undefined,

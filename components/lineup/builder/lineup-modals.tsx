@@ -1,16 +1,18 @@
 import { AddPlayerModal } from "@/components/lineup/modals/add-player-modal";
 import { PlayerDetailModal } from "@/components/lineup/modals/player-details-modal";
 import { CreateTeamModal } from "@/components/lineup/modals/create-team-modal";
+import type { Player } from "@/types/player";
+import type { Dispatch, SetStateAction } from "react";
 
 interface LineupModalsProps {
   addPlayerOpen: boolean;
   playerDetailOpen: boolean;
   createTeamOpen: boolean;
-  setAddPlayerOpen: (open: boolean) => void;
-  setPlayerDetailOpen: (open: boolean) => void;
-  setCreateTeamOpen: (open: boolean) => void;
+  setAddPlayerOpen: Dispatch<SetStateAction<boolean>>;
+  setPlayerDetailOpen: Dispatch<SetStateAction<boolean>>;
+  setCreateTeamOpen: Dispatch<SetStateAction<boolean>>;
   selectedPlayer: Player | null;
-  handleAddPlayer: (player: Player) => void;
+  handleAddPlayer: (player: Omit<Player, "id">) => boolean;
   handleRemovePlayer: (playerId: string) => void;
 }
 

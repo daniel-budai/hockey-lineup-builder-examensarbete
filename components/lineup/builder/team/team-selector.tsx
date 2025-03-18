@@ -14,7 +14,6 @@ interface TeamSelectorProps {
   teams: Team[];
   currentTeam: Team | null;
   onSelectTeam: (team: Team) => void;
-  onCreateTeam: (team: Omit<Team, "id" | "createdAt" | "updatedAt">) => boolean;
   onCreateTeamClick: () => void;
 }
 
@@ -22,7 +21,6 @@ export function TeamSelector({
   teams,
   currentTeam,
   onSelectTeam,
-  onCreateTeam,
   onCreateTeamClick,
 }: TeamSelectorProps) {
   return (
@@ -60,7 +58,7 @@ export function TeamSelector({
       >
         {teams.map((team) => (
           <DropdownMenuItem
-            key={team.id}
+            key={team._id}
             className="hover:bg-[#0f172a] focus:bg-[#0f172a] cursor-pointer"
             onClick={() => onSelectTeam(team)}
           >

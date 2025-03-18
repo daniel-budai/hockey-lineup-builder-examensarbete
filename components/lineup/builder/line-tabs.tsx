@@ -1,10 +1,11 @@
 import { LineTab } from "./rink/line-tab";
+import type { LineupData, LineNumber } from "@/types/lineup";
 
 interface LineTabsProps {
   lineup: LineupData;
-  activeTab: string;
-  hoveredTab: string | null;
-  onTabChange: (tab: string) => void;
+  activeTab: LineNumber;
+  hoveredTab: LineNumber | null;
+  onTabChange: (tab: LineNumber) => void;
 }
 
 export function LineTabs({
@@ -15,7 +16,7 @@ export function LineTabs({
 }: LineTabsProps) {
   return (
     <div className="flex border-b border-[#334155]/50 overflow-x-auto">
-      {Object.keys(lineup).map((line, index) => (
+      {(Object.keys(lineup) as LineNumber[]).map((line, index) => (
         <LineTab
           key={line}
           line={line}

@@ -1,6 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import type { PlayerFormData } from "@/hooks/usePlayerForm";
+import type { PlayerFormData } from "@/schemas/player.schema";
 
 interface PlayerPositionSectionProps {
   formData: PlayerFormData;
