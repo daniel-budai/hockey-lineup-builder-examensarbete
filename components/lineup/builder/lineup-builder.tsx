@@ -133,7 +133,12 @@ export function LineupBuilder() {
 
               <RosterContainer
                 players={players}
-                onViewDetails={handleViewPlayerDetails}
+                onViewDetails={(player) =>
+                  handleViewPlayerDetails(
+                    player,
+                    setPlayerDetailOpen as Dispatch<SetStateAction<boolean>>
+                  )
+                }
                 onRemovePlayer={removePlayerCompletely}
               />
             </div>
