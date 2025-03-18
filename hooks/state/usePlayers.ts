@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import type { Player } from "@/types/player";
 import type { LineupData } from "@/types/lineup";
+import type { Dispatch, SetStateAction } from "react";
 
 type FilterTabType = "all" | "forwards" | "defense" | "goalies";
 type Position = "LW" | "C" | "RW" | "LD" | "RD" | "G";
@@ -22,7 +23,10 @@ interface UsePlayersReturn {
   readonly handleAddPlayer: (player: Omit<Player, "id">) => boolean;
   readonly handleRemovePlayer: (playerId: string) => void;
   readonly getAvailablePlayers: (lineup: LineupData) => Player[];
-  readonly handleViewPlayerDetails: (player: Player) => void;
+  readonly handleViewPlayerDetails: (
+    player: Player,
+    setModalOpen: Dispatch<SetStateAction<boolean>>
+  ) => void;
 }
 
 export function usePlayers(): UsePlayersReturn {
@@ -119,8 +123,15 @@ export function usePlayers(): UsePlayersReturn {
     }
   };
 
-  const handleViewPlayerDetails = (player: Player): void => {
+  const handleViewPlayerDetails = (
+    player: Player,
+    setModalOpen: Dispatch<SetStateAction<boolean>>
+  ): void => {
+    console.log("handleViewPlayerDetails called with player:", player.name);
     setSelectedPlayer(player);
+    console.log("Setting playerDetailOpen to true");
+    setModalOpen(true);
+    console.log("handleViewPlayerDetails completed");
   };
 
   return {
