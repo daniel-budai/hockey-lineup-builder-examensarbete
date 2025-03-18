@@ -1,92 +1,86 @@
 "use client";
-import type { Team } from "@/types/team";
+import { useTeamStore } from "@/stores/teamStore";
+import { useLineupStore } from "@/stores/lineupStore";
+import { usePlayerStore } from "@/stores/playerStore";
+import { Team } from "@/types/team";
+import { toast } from "sonner";
+import { useState } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown, Plus } from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TeamSelectorProps {
-  teams: Team[];
-  currentTeam: Team | null;
-  onSelectTeam: (team: Team) => void;
-  onCreateTeam: (team: Omit<Team, "id" | "createdAt" | "updatedAt">) => boolean;
   onCreateTeamClick: () => void;
 }
 
-export function TeamSelector({
-  teams,
-  currentTeam,
-  onSelectTeam,
-  onCreateTeam,
-  onCreateTeamClick,
-}: TeamSelectorProps) {
+export function TeamSelector({ onCreateTeamClick }: TeamSelectorProps) {
+  const teams = useTeamStore((state) => state.teams);
+  const currentTeam = useTeamStore((state) => state.currentTeam);
+  const selectTeam = useTeamStore((state) => state.selectTeam);
+  const loadLineup = useLineupStore((state) => state.loadLineup);
+  const resetLineup = useLineupStore((state) => state.resetLineup);
+  const resetPlayers = usePlayerStore((state) => state.resetPlayers);
+  const fetchPlayers = usePlayerStore((state) => state.fetchPlayers);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleTeamSelect = async (team: Team) => {
+    try {
+      setIsLoading(true);
+      // Reset states first
+      resetLineup();
+      resetPlayers();
+
+      // Select team first
+      selectTeam(team);
+
+      // Wait for both operations to complete
+      await Promise.all([loadLineup(), fetchPlayers()]);
+
+      toast.success("Team loaded successfully");
+    } catch (error) {
+      console.error("Error loading team:", error);
+      toast.error("Failed to load team");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="!bg-[#1e293b] !border-[#334155] !text-white hover:!bg-[#0f172a] rounded-full shadow-sm w-full"
-        >
-          {currentTeam ? (
-            <div className="flex items-center">
-              <div
-                className="w-6 h-6 rounded-full mr-2 flex items-center justify-center text-xs font-bold"
-                style={{
-                  backgroundColor: currentTeam.primaryColor,
-                  color: currentTeam.secondaryColor,
-                }}
-              >
-                {currentTeam.abbreviation}
-              </div>
-              <span>{currentTeam.name}</span>
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </div>
-          ) : (
-            <div className="flex items-center">
-              <span>Select Team</span>
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </div>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className="rounded-xl shadow-lg bg-[#1e293b] border-[#334155] text-white min-w-[200px]"
+    <div className="flex items-center space-x-2">
+      <Select
+        value={currentTeam?._id || ""}
+        onValueChange={(value) => {
+          const team = teams.find((t) => t._id === value);
+          if (team) handleTeamSelect(team);
+        }}
+        disabled={isLoading}
       >
-        {teams.map((team) => (
-          <DropdownMenuItem
-            key={team.id}
-            className="hover:bg-[#0f172a] focus:bg-[#0f172a] cursor-pointer"
-            onClick={() => onSelectTeam(team)}
-          >
-            <div
-              className="w-6 h-6 rounded-full mr-2 flex items-center justify-center text-xs font-bold"
-              style={{
-                backgroundColor: team.primaryColor,
-                color: team.secondaryColor,
-              }}
-            >
-              {team.abbreviation}
-            </div>
-            <span>{team.name}</span>
-          </DropdownMenuItem>
-        ))}
-
-        {teams.length > 0 && <DropdownMenuSeparator className="bg-[#334155]" />}
-
-        <DropdownMenuItem
-          className="hover:bg-[#0f172a] focus:bg-[#0f172a] cursor-pointer"
-          onClick={onCreateTeamClick}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create New Team
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        <SelectTrigger className="w-[180px] bg-slate-800 border-slate-700">
+          <SelectValue placeholder="Select a team" />
+        </SelectTrigger>
+        <SelectContent>
+          {teams.map((team) => (
+            <SelectItem key={team._id} value={team._id} disabled={isLoading}>
+              {team.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button
+        variant="outline"
+        size="icon"
+        className="bg-slate-800 border-slate-700"
+        onClick={onCreateTeamClick}
+        disabled={isLoading}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    </div>
   );
 }

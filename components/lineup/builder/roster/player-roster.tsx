@@ -4,6 +4,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { PlayerCard } from "@/components/lineup/builder/roster/player-card";
 import type { Player } from "@/types/lineup";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePlayerStore } from "@/stores/playerStore";
 
 interface PlayerRosterProps {
   players: Player[];

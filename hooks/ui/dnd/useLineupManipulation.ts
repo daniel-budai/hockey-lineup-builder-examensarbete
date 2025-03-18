@@ -1,17 +1,20 @@
-import type { Position, LineupData } from "@/types/lineup"; //player
+import type { Position, LineupData, LineConfiguration } from "@/types/lineup";
 
 export function useLineupManipulation() {
   const removePlayerFromLineup = (lineup: LineupData, playerId: string) => {
     const newLineup = { ...lineup };
-    Object.keys(newLineup).forEach((line) => {
-      Object.keys(newLineup[line as keyof LineupData]).forEach((pos) => {
-        if (
-          newLineup[line as keyof LineupData][pos as Position]?.id === playerId
-        ) {
-          newLineup[line as keyof LineupData][pos as Position] = null;
+    const lineKeys = ["line1", "line2", "line3", "line4"] as const;
+
+    lineKeys.forEach((line) => {
+      const lineConfig = newLineup[line] as LineConfiguration;
+      Object.keys(lineConfig).forEach((pos) => {
+        const player = lineConfig[pos as Position];
+        if (player && (player._id === playerId || player.id === playerId)) {
+          lineConfig[pos as Position] = null;
         }
       });
     });
+
     return newLineup;
   };
 

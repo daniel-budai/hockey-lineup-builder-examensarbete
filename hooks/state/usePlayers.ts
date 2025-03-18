@@ -1,105 +1,18 @@
-// @/hooks/state/usePlayers.ts
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import type { Player } from "@/types/lineup";
+import { usePlayerStore } from "@/stores/playerStore";
 
 export function usePlayers() {
-  const [players, setPlayers] = useState<Player[]>(() => {
-    if (typeof window !== "undefined") {
-      const teamId = localStorage.getItem("selectedTeamId");
-      const savedPlayers = localStorage.getItem(`hockey-players-${teamId}`);
-      if (savedPlayers) {
-        try {
-          return JSON.parse(savedPlayers);
-        } catch (error) {
-          console.error("Failed to parse saved players:", error);
-        }
-      }
-    }
-    return [];
-  });
-
-  useEffect(() => {
-    const teamId = localStorage.getItem("selectedTeamId");
-    localStorage.setItem(`hockey-players-${teamId}`, JSON.stringify(players));
-  }, [players]);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterTab, setFilterTab] = useState("all");
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-
-  function handleAddPlayer(player: Omit<Player, "id">) {
-    console.log("handleAddPlayer called with:", player);
-    const isNumberTaken = players.some((p) => p.number === player.number);
-    if (isNumberTaken) {
-      toast.error(`Jersey number ${player.number} is already taken`);
-      return false;
-    }
-
-    const newPlayer: Player = {
-      ...player,
-      id: `p${Date.now()}`,
-    };
-
-    setPlayers((prev) => [...prev, newPlayer]);
-    toast.success(`${player.name} has been added to the roster`);
-    return true;
-  }
-
-  function handleRemovePlayer(playerId: string) {
-    setPlayers((prev) => prev.filter((p) => p.id !== playerId));
-    toast.success("Player has been removed from the roster");
-  }
-
-  function getAvailablePlayers(lineup: any) {
-    const usedPlayerIds = new Set<string>();
-
-    Object.values(lineup).forEach((line) => {
-      Object.values(line).forEach((player) => {
-        if (player) usedPlayerIds.add(player.id);
-      });
-    });
-
-    console.log("Players before filtering:", players);
-    console.log("Used player IDs:", usedPlayerIds);
-
-    let filteredPlayers = players
-      .filter((player) => !usedPlayerIds.has(player.id))
-      .filter(
-        (player) =>
-          player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          player.positions?.some((pos) =>
-            pos.toLowerCase().includes(searchQuery.toLowerCase())
-          ) ||
-          player.nationality
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          player.number.toString().includes(searchQuery)
-      );
-
-    if (filterTab !== "all") {
-      if (filterTab === "forwards") {
-        filteredPlayers = filteredPlayers.filter((player) =>
-          player.positions?.some((pos) => ["LW", "C", "RW"].includes(pos))
-        );
-      } else if (filterTab === "defense") {
-        filteredPlayers = filteredPlayers.filter((player) =>
-          player.positions?.some((pos) => ["LD", "RD"].includes(pos))
-        );
-      } else if (filterTab === "goalies") {
-        filteredPlayers = filteredPlayers.filter((player) =>
-          player.positions?.includes("G")
-        );
-      }
-    }
-
-    return filteredPlayers;
-  }
-
-  function handleViewPlayerDetails(player: Player) {
-    console.log("Setting selected player:", player.name);
-    setSelectedPlayer(player);
-  }
+  const selectedPlayer = usePlayerStore((state) => state.selectedPlayer);
+  const setSelectedPlayer = usePlayerStore((state) => state.setSelectedPlayer);
+  const players = usePlayerStore((state) => state.players);
+  const addPlayer = usePlayerStore((state) => state.addPlayer);
+  const removePlayer = usePlayerStore((state) => state.removePlayer);
+  const getAvailablePlayers = usePlayerStore(
+    (state) => state.getAvailablePlayers
+  );
+  const searchQuery = usePlayerStore((state) => state.searchQuery);
+  const setSearchQuery = usePlayerStore((state) => state.setSearchQuery);
+  const filterTab = usePlayerStore((state) => state.filterTab);
+  const setFilterTab = usePlayerStore((state) => state.setFilterTab);
 
   return {
     players,
@@ -109,9 +22,9 @@ export function usePlayers() {
     setFilterTab,
     selectedPlayer,
     setSelectedPlayer,
-    handleAddPlayer,
-    handleRemovePlayer,
+    handleAddPlayer: addPlayer,
+    handleRemovePlayer: removePlayer,
     getAvailablePlayers,
-    handleViewPlayerDetails,
+    handleViewPlayerDetails: setSelectedPlayer,
   };
 }

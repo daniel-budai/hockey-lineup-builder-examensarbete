@@ -1,32 +1,16 @@
-export interface Player {
-  id: string;
-  name: string;
-  number: number;
-  age: number;
-  nationality: string;
-  positions: string[];
-  stats?: {
-    goals?: number;
-    assists?: number;
-    points?: number;
-    plusMinus?: number;
-    gamesPlayed?: number;
-    savePercentage?: number;
-    goalsAgainstAverage?: number;
-  };
-  height?: {
-    cm?: number;
-    imperial?: string;
-  };
-  weight?: {
-    kg?: number;
-    lbs?: number;
-  };
-  birthplace?: string;
-  birthdate?: string;
-}
+import type { ISODateString, UUID } from "./common";
+import type { Player } from "./player";
 
-export type Position = "LW" | "C" | "RW" | "LD" | "RD" | "G";
+export const POSITIONS = ["LW", "C", "RW", "LD", "RD", "G"] as const;
+export type Position = (typeof POSITIONS)[number];
+
+export const FORWARD_POSITIONS = ["LW", "C", "RW"] as const;
+export type ForwardPosition = (typeof FORWARD_POSITIONS)[number];
+
+export const DEFENSE_POSITIONS = ["LD", "RD"] as const;
+export type DefensePosition = (typeof DEFENSE_POSITIONS)[number];
+
+export type GoaliePosition = "G";
 
 export interface LineConfiguration {
   LW: Player | null;
@@ -38,8 +22,20 @@ export interface LineConfiguration {
 }
 
 export interface LineupData {
+  id?: UUID;
+  teamId: UUID;
+  name: string;
   line1: LineConfiguration;
   line2: LineConfiguration;
   line3: LineConfiguration;
   line4: LineConfiguration;
+  createdAt?: ISODateString;
+  updatedAt?: ISODateString;
 }
+
+export type CreateLineupDTO = Omit<
+  LineupData,
+  "id" | "createdAt" | "updatedAt"
+>;
+
+export type UpdateLineupDTO = Partial<CreateLineupDTO>;

@@ -3,10 +3,12 @@ import type {
   DragMoveEvent,
   DragEndEvent,
 } from "@dnd-kit/core";
-import type { Player, Position, LineupData } from "@/types/lineup";
+import type { Position, LineupData } from "@/types/lineup";
+import type { Player } from "@/types/player";
 import { toast } from "sonner";
 import { useLineupManipulation } from "./useLineupManipulation";
 import { useTabHandling } from "./useTabHandling";
+import { useActiveStates } from "./useActiveStates";
 
 interface UseDragHandlersProps {
   lineup: LineupData;
@@ -22,7 +24,6 @@ interface UseDragHandlersProps {
 export function useDragHandlers({
   lineup,
   setLineup,
-  activeTab,
   setActiveTab,
   players,
   isPositionValid,
@@ -44,7 +45,7 @@ export function useDragHandlers({
 
     const player = line
       ? lineup[line as keyof LineupData][position as Position]
-      : players.find((p) => p.id === playerId);
+      : players.find((p) => p._id === playerId || p.id === playerId);
 
     if (player) {
       activeStates.setActivePlayer(player);
@@ -67,7 +68,7 @@ export function useDragHandlers({
       if (handleTabHover(tabLine, sourceLine)) {
         const newLineup = removePlayerFromLineup(
           lineup,
-          activeStates.activePlayer.id
+          activeStates.activePlayer._id || activeStates.activePlayer.id
         );
         activeStates.setPreviewLineup(newLineup);
       }
@@ -86,7 +87,7 @@ export function useDragHandlers({
 
     const newLineup = removePlayerFromLineup(
       lineup,
-      activeStates.activePlayer.id
+      activeStates.activePlayer._id || activeStates.activePlayer.id
     );
     const overId = over.id.toString();
 
@@ -97,7 +98,6 @@ export function useDragHandlers({
         newLineup[targetLine as keyof LineupData][sourcePosition as Position] =
           activeStates.activePlayer;
       }
-      console.log("Setting lineup after tab drop:", newLineup);
       setLineup(newLineup);
       setActiveTab(targetLine);
     } else if (overId.includes("-")) {
@@ -112,24 +112,22 @@ export function useDragHandlers({
       } else {
         newLineup[targetLine as keyof LineupData][targetPosition as Position] =
           activeStates.activePlayer;
-        console.log("Setting lineup after position drop:", newLineup);
         setLineup(newLineup);
       }
     }
 
     if (over) {
-      const [lineId, position] = over.id.toString().split("-");
+      const [, position] = over.id.toString().split("-");
 
       if (position === "G" && activeStates.activePlayer) {
         const updatedLineup = { ...newLineup };
-
         Object.keys(updatedLineup).forEach((line) => {
-          updatedLineup[line].G = activeStates.activePlayer;
+          if (line.startsWith("line")) {
+            updatedLineup[line as keyof LineupData].G =
+              activeStates.activePlayer;
+          }
         });
-
         setLineup(updatedLineup);
-      } else {
-        setLineup(newLineup);
       }
     }
 
@@ -137,5 +135,10 @@ export function useDragHandlers({
     setCurrentHoveredTab(null);
   }
 
-  return { handleDragStart, handleDragMove, handleDragEnd };
+  function handleDragCancel() {
+    activeStates.resetActiveStates();
+    setCurrentHoveredTab(null);
+  }
+
+  return { handleDragStart, handleDragMove, handleDragEnd, handleDragCancel };
 }

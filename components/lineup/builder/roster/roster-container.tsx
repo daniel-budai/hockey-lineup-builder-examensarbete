@@ -4,115 +4,119 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayerRoster } from "@/components/lineup/builder/roster/player-roster";
-import { usePlayers } from "@/hooks/state/usePlayers";
-import { useLineup } from "@/hooks/state/useLineup";
-import { PlayerCard } from "@/components/lineup/builder/roster/player-card";
+import { usePlayerStore } from "@/stores/playerStore";
+import type { Player } from "@/types/player";
+
+type FilterTab = "all" | "forwards" | "defense" | "goalies";
 
 interface RosterContainerProps {
-  players: Player[];
   onViewDetails: (player: Player) => void;
   onRemovePlayer: (playerId: string) => void;
 }
 
 export function RosterContainer({
-  players: allPlayers,
   onViewDetails,
   onRemovePlayer,
 }: RosterContainerProps) {
-  const { searchQuery, setSearchQuery, filterTab, setFilterTab } = usePlayers();
-  const { lineup } = useLineup();
+  const players = usePlayerStore((state) => state.players);
+  const searchQuery = usePlayerStore((state) => state.searchQuery);
+  const setSearchQuery = usePlayerStore((state) => state.setSearchQuery);
+  const filterTab = usePlayerStore((state) => state.filterTab);
+  const setFilterTab = usePlayerStore((state) => state.setFilterTab);
 
-  const filteredPlayers = allPlayers.filter((player) => {
+  const filteredPlayers = players.filter((player) => {
     const matchesSearch =
-      player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      player.positions?.some((pos) =>
+      (player.name?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+        false) ||
+      (player.positions?.some((pos) =>
         pos.toLowerCase().includes(searchQuery.toLowerCase())
-      ) ||
-      (player.nationality &&
-        player.nationality.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      player.number.toString().includes(searchQuery);
+      ) ??
+        false) ||
+      (player.nationality?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+        false) ||
+      (player.number?.toString().includes(searchQuery) ?? false);
 
     if (!matchesSearch) return false;
 
     if (filterTab === "all") return true;
     if (filterTab === "forwards")
-      return player.positions?.some((pos) => ["LW", "C", "RW"].includes(pos));
+      return (
+        player.positions?.some((pos) => ["LW", "C", "RW"].includes(pos)) ??
+        false
+      );
     if (filterTab === "defense")
-      return player.positions?.some((pos) => ["LD", "RD"].includes(pos));
-    if (filterTab === "goalies") return player.positions?.includes("G");
+      return (
+        player.positions?.some((pos) => ["LD", "RD"].includes(pos)) ?? false
+      );
+    if (filterTab === "goalies")
+      return player.positions?.includes("G") ?? false;
 
     return true;
   });
 
   return (
-    <div className="bg-[#1e293b]/80 rounded-xl shadow-lg border border-white/5 overflow-hidden backdrop-blur-sm">
+    <div className="bg-[#1e293b] rounded-xl shadow-lg border border-white/5 overflow-hidden">
       <div className="p-4 border-b border-[#334155]/50">
-        <h3 className="text-lg font-semibold text-white mb-3">
-          Available Players
-        </h3>
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
             <Input
+              type="text"
               placeholder="Search players..."
-              className="pl-9 bg-[#0f172a]/80 border-[#334155] focus-visible:ring-[#64748b] text-white placeholder:text-slate-500 rounded-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-[#0f172a] border-[#334155] text-white placeholder-slate-400 w-full"
             />
           </div>
           <Button
-            variant="outline"
             size="icon"
-            className="border-[#334155] text-white hover:bg-[#0f172a] rounded-full shadow-sm"
+            variant="outline"
+            className="border-[#334155] hover:bg-[#0f172a] text-white"
           >
             <Filter className="h-4 w-4" />
           </Button>
         </div>
-      </div>
 
-      <Tabs
-        defaultValue="all"
-        className="w-full"
-        value={filterTab}
-        onValueChange={setFilterTab}
-      >
-        <div className="px-4 pt-2">
-          <TabsList className="w-full grid grid-cols-4 bg-[#0f172a]/50 rounded-full p-1">
+        <Tabs
+          value={filterTab}
+          onValueChange={(value) => setFilterTab(value as typeof filterTab)}
+        >
+          <TabsList className="bg-[#0f172a] border border-[#334155]">
             <TabsTrigger
               value="all"
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:text-[#0f172a] data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#1e293b] text-white"
             >
               All
             </TabsTrigger>
             <TabsTrigger
               value="forwards"
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:text-[#0f172a] data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#1e293b] text-white"
             >
               Forwards
             </TabsTrigger>
             <TabsTrigger
               value="defense"
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:text-[#0f172a] data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#1e293b] text-white"
             >
               Defense
             </TabsTrigger>
             <TabsTrigger
               value="goalies"
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:text-[#0f172a] data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#1e293b] text-white"
             >
               Goalies
             </TabsTrigger>
           </TabsList>
-        </div>
+        </Tabs>
+      </div>
 
-        <div className="p-4">
-          <PlayerRoster
-            players={filteredPlayers}
-            onViewDetails={onViewDetails}
-            onRemovePlayer={onRemovePlayer}
-          />
-        </div>
-      </Tabs>
+      <div className="p-4">
+        <PlayerRoster
+          players={filteredPlayers}
+          onViewDetails={onViewDetails}
+          onRemovePlayer={onRemovePlayer}
+        />
+      </div>
     </div>
   );
 }

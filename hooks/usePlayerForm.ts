@@ -1,11 +1,14 @@
 import { useState } from "react";
-import type { Player } from "@/types/lineup";
+import type { CreatePlayerDTO } from "@/types/player";
+import type { Position } from "@/types/lineup";
+import type { PlayerStats } from "@/types/common";
 import {
   convertHeight,
   convertWeight,
   calculateAge,
 } from "@/lib/utils/conversions";
-import { playerFormSchema, PlayerFormData } from "@/schemas/player.schema";
+import { playerFormSchema } from "@/schemas/player.schema";
+import { useTeamStore } from "@/stores/teamStore";
 
 export interface PlayerFormData {
   firstName: string;
@@ -97,19 +100,15 @@ export function usePlayerForm() {
       updateField("isForward", checked);
       if (checked) {
         updateField("isGoalie", false);
-        // Clear positions if switching types
-        if (formData.isDefense || formData.isGoalie) {
-          updateField("positions", []);
-        }
+        updateField("isDefense", false);
+        updateField("positions", []);
       }
     } else if (type === "defense") {
       updateField("isDefense", checked);
       if (checked) {
+        updateField("isForward", false);
         updateField("isGoalie", false);
-        // Clear positions if switching types
-        if (formData.isForward || formData.isGoalie) {
-          updateField("positions", []);
-        }
+        updateField("positions", []);
       }
     } else if (type === "goalie") {
       updateField("isGoalie", checked);
@@ -123,7 +122,7 @@ export function usePlayerForm() {
 
   const handlePositionChange = (position: string, checked: boolean) => {
     if (checked) {
-      updateField("positions", [...formData.positions, position]);
+      updateField("positions", [position]);
     } else {
       updateField(
         "positions",
@@ -137,10 +136,12 @@ export function usePlayerForm() {
 
     if (!result.success) {
       const newErrors: Record<string, string> = {};
-      result.error.issues.forEach((issue) => {
-        const path = issue.path.join(".");
-        newErrors[path] = issue.message;
-      });
+      result.error.issues.forEach(
+        (issue: { path: (string | number)[]; message: string }) => {
+          const path = issue.path.join(".");
+          newErrors[path] = issue.message;
+        }
+      );
 
       setErrors(newErrors);
       return false;
@@ -172,30 +173,41 @@ export function usePlayerForm() {
     setErrors({});
   };
 
-  const createPlayerObject = (): Omit<Player, "id"> => {
+  const createPlayerObject = () => {
+    const currentTeam = useTeamStore.getState().currentTeam;
+
     return {
-      name: `${formData.firstName} ${formData.lastName}`,
-      number: Number.parseInt(formData.number),
-      age: formData.age ? Number.parseInt(formData.age) : undefined,
-      nationality: formData.nationality,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      number: Number(formData.number),
       positions: formData.positions,
-      stats: {},
-      height: {
-        cm: formData.heightCm ? Number.parseInt(formData.heightCm) : undefined,
-        imperial: formData.heightFt
-          ? `${formData.heightFt}'${formData.heightIn}"`
-          : undefined,
+      team: currentTeam._id,
+      nationality: formData.nationality || "",
+      physical: {
+        height: {
+          metric: formData.heightCm ? Number(formData.heightCm) : 0,
+          imperial: formData.heightFt
+            ? `${formData.heightFt}'${formData.heightIn}"`
+            : "",
+        },
+        weight: {
+          metric: formData.weightKg ? Number(formData.weightKg) : 0,
+          imperial: formData.weightLbs ? `${formData.weightLbs} lbs` : "",
+        },
+        birthdate: formData.birthdate || "",
+        birthplace: formData.birthplace || "",
       },
-      weight: {
-        kg: formData.weightKg ? Number.parseInt(formData.weightKg) : undefined,
-        lbs: formData.weightLbs
-          ? Number.parseInt(formData.weightLbs)
-          : undefined,
+      age: formData.age ? Number(formData.age) : 0,
+      isForward: formData.isForward,
+      isDefense: formData.isDefense,
+      isGoalie: formData.isGoalie,
+      stats: {
+        goals: 0,
+        assists: 0,
+        points: 0,
+        plusMinus: 0,
+        gamesPlayed: 0,
       },
-      birthplace: formData.birthplace || undefined,
-      birthdate: formData.birthdate
-        ? new Date(formData.birthdate).toISOString()
-        : undefined,
     };
   };
 

@@ -1,4 +1,5 @@
 // @/hooks/ui/useDragAndDrop.ts
+import { LineupData } from "@/types/lineup";
 import { useActiveStates } from "./dnd/useActiveStates";
 import { useDndSensors } from "./dnd/useDndSensors";
 import { useDragHandlers } from "./dnd/useDragHandlers";

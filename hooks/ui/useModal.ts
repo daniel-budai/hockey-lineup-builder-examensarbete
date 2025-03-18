@@ -1,4 +1,3 @@
-// @/hooks/ui/useModals.ts
 import { useState } from "react";
 
 export function useModals() {

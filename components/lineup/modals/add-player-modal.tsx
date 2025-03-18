@@ -13,12 +13,14 @@ import { usePlayerForm } from "@/hooks/usePlayerForm";
 import { PersonalInfoSection } from "@/components/lineup/modals/sections/PersonalInfo-Section";
 import { PhysicalInfoSection } from "@/components/lineup/modals/sections/PhysicalInfomation-section";
 import { PlayerPositionSection } from "@/components/lineup/modals/sections/PlayerPositionSection";
-import type { Player } from "@/types/lineup";
+import type { CreatePlayerDTO } from "@/types/player";
+import { usePlayerStore } from "@/stores/playerStore";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddPlayerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddPlayer: (player: Omit<Player, "id">) => boolean;
+  onAddPlayer: (player: CreatePlayerDTO) => Promise<void>;
 }
 
 export function AddPlayerModal({
@@ -49,14 +51,32 @@ export function AddPlayerModal({
     onOpenChange(open);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     const player = createPlayerObject();
-    const success = onAddPlayer(player);
 
-    if (success) {
+    // Verify all required fields are present
+    if (
+      !player.firstName ||
+      !player.lastName ||
+      !player.number ||
+      !player.positions?.length
+    ) {
+      console.error("Missing required fields:", {
+        firstName: player.firstName,
+        lastName: player.lastName,
+        number: player.number,
+        positions: player.positions,
+      });
+      return;
+    }
+
+    try {
+      await onAddPlayer(player);
       handleOpenChange(false);
+    } catch (error) {
+      console.error("Failed to add player:", error);
     }
   };
 
@@ -92,6 +112,27 @@ export function AddPlayerModal({
               onPositionChange={handlePositionChange}
               error={errors.positions}
             />
+
+            <div className="flex gap-4">
+              <Checkbox
+                checked={formData.isForward}
+                onCheckedChange={(checked) =>
+                  handlePositionTypeChange("forward", checked)
+                }
+              />
+              <Checkbox
+                checked={formData.isDefense}
+                onCheckedChange={(checked) =>
+                  handlePositionTypeChange("defense", checked)
+                }
+              />
+              <Checkbox
+                checked={formData.isGoalie}
+                onCheckedChange={(checked) =>
+                  handlePositionTypeChange("goalie", checked)
+                }
+              />
+            </div>
           </div>
         </ScrollArea>
 
