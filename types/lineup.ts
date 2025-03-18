@@ -1,45 +1,13 @@
-export interface Player {
-  id: string;
-  name: string;
-  number: number;
-  age: number;
-  nationality: string;
-  positions: string[];
-  stats?: {
-    goals?: number;
-    assists?: number;
-    points?: number;
-    plusMinus?: number;
-    gamesPlayed?: number;
-    savePercentage?: number;
-    goalsAgainstAverage?: number;
-  };
-  height?: {
-    cm?: number;
-    imperial?: string;
-  };
-  weight?: {
-    kg?: number;
-    lbs?: number;
-  };
-  birthplace?: string;
-  birthdate?: string;
-}
+import type { Player } from "./player";
+import type { Position } from "./positions";
 
-export type Position = "LW" | "C" | "RW" | "LD" | "RD" | "G";
+export type LineNumber = "line1" | "line2" | "line3" | "line4";
+export type LineTab = LineNumber;
+export type LineConfiguration = Record<Position, Player | null>;
+export type LineupData = Record<LineNumber, LineConfiguration>;
 
-export interface LineConfiguration {
-  LW: Player | null;
-  C: Player | null;
-  RW: Player | null;
-  LD: Player | null;
-  RD: Player | null;
-  G: Player | null;
-}
-
-export interface LineupData {
-  line1: LineConfiguration;
-  line2: LineConfiguration;
-  line3: LineConfiguration;
-  line4: LineConfiguration;
-}
+export type LineupAction =
+  | { type: "ADD_PLAYER"; line: LineNumber; position: Position; player: Player }
+  | { type: "REMOVE_PLAYER"; line: LineNumber; position: Position }
+  | { type: "RESET_LINE"; line: LineNumber }
+  | { type: "RESET_LINEUP" };

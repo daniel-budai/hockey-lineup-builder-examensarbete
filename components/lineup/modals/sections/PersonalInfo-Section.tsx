@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { countries } from "@/data/countries";
-import type { PlayerFormData } from "@/hooks/usePlayerForm";
+import type { PlayerFormData } from "@/schemas/player.schema";
 
 interface PersonalInfoSectionProps {
   formData: PlayerFormData;
@@ -39,7 +39,12 @@ export function PersonalInfoSection({
           <Input
             id="firstName"
             value={formData.firstName}
-            onChange={(e) => onUpdate("firstName", e.target.value)}
+            onChange={(e) =>
+              onUpdate(
+                "firstName",
+                e.target.value as PlayerFormData["firstName"]
+              )
+            }
             className="bg-[#0f172a]/80 border-[#334155] text-white"
             placeholder="John"
           />
@@ -58,7 +63,9 @@ export function PersonalInfoSection({
           <Input
             id="lastName"
             value={formData.lastName}
-            onChange={(e) => onUpdate("lastName", e.target.value)}
+            onChange={(e) =>
+              onUpdate("lastName", e.target.value as PlayerFormData["lastName"])
+            }
             className="bg-[#0f172a]/80 border-[#334155] text-white"
             placeholder="Doe"
           />
@@ -79,7 +86,9 @@ export function PersonalInfoSection({
           <Input
             id="number"
             value={formData.number}
-            onChange={(e) => onUpdate("number", e.target.value)}
+            onChange={(e) =>
+              onUpdate("number", e.target.value as PlayerFormData["number"])
+            }
             className="bg-[#0f172a]/80 border-[#334155] text-white"
             placeholder="88"
             type="number"
@@ -100,7 +109,9 @@ export function PersonalInfoSection({
           </Label>
           <Select
             value={formData.nationality}
-            onValueChange={(value) => onUpdate("nationality", value)}
+            onValueChange={(value) =>
+              onUpdate("nationality", value as PlayerFormData["nationality"])
+            }
           >
             <SelectTrigger className="bg-[#0f172a]/80 border-[#334155] text-white">
               <SelectValue placeholder="Select country" />
@@ -125,7 +136,12 @@ export function PersonalInfoSection({
           <Input
             id="birthplace"
             value={formData.birthplace}
-            onChange={(e) => onUpdate("birthplace", e.target.value)}
+            onChange={(e) =>
+              onUpdate(
+                "birthplace",
+                e.target.value as PlayerFormData["birthplace"]
+              )
+            }
             className="bg-[#0f172a]/80 border-[#334155] text-white"
             placeholder="Toronto, ON"
           />
@@ -135,7 +151,11 @@ export function PersonalInfoSection({
           <Label htmlFor="birthdate">Date of Birth</Label>
           <Input
             id="birthdate"
-            value={formData.birthdate}
+            value={
+              formData.birthdate
+                ? formData.birthdate.toString().split("T")[0]
+                : ""
+            }
             onChange={(e) => onBirthdateChange(e.target.value)}
             className="bg-[#0f172a]/80 border-[#334155] text-white"
             type="date"
@@ -148,7 +168,9 @@ export function PersonalInfoSection({
         <Input
           id="age"
           value={formData.age}
-          onChange={(e) => onUpdate("age", e.target.value)}
+          onChange={(e) =>
+            onUpdate("age", e.target.value as PlayerFormData["age"])
+          }
           className="bg-[#0f172a]/80 border-[#334155] text-white"
           placeholder="25"
           type="number"

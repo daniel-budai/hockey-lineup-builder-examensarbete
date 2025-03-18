@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Player } from "@/types/lineup";
+import type { Player } from "@/types/player";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { Position } from "@/types/positions";
 
 interface PlayerDetailModalProps {
   open: boolean;
@@ -111,7 +112,7 @@ export function PlayerDetailModal({
                 <div>
                   <h3 className="text-2xl font-bold">{player.name}</h3>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {player.positions?.map((position) => (
+                    {player.positions?.map((position: Position) => (
                       <span
                         key={position}
                         className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-[#334155] text-white"

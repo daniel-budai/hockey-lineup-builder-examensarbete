@@ -15,7 +15,7 @@ export const playerFormSchema = z.object({
   birthplace: z.string().optional(),
   birthdate: z.string().optional(),
   age: z.string().optional(),
-  positions: z.array(z.string()).min(1, "At least one position is required"),
+  positions: z.array(positionEnum).min(1, "At least one position is required"),
   isForward: z.boolean(),
   isDefense: z.boolean(),
   isGoalie: z.boolean(),

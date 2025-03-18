@@ -3,26 +3,27 @@ import type {
   DragMoveEvent,
   DragEndEvent,
 } from "@dnd-kit/core";
-import type { Player, Position, LineupData } from "@/types/lineup";
+import type { Player } from "@/types/player";
+import type { Position } from "@/types/positions";
+import type { LineTab, LineupData } from "@/types/lineup";
 import { toast } from "sonner";
 import { useLineupManipulation } from "./useLineupManipulation";
 import { useTabHandling } from "./useTabHandling";
+import { useActiveStates } from "./useActiveStates";
 
 interface UseDragHandlersProps {
   lineup: LineupData;
   setLineup: (lineup: LineupData) => void;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  setActiveTab: (tab: LineTab) => void;
   players: Player[];
   isPositionValid: (player: Player, position: Position) => boolean;
-  setCurrentHoveredTab: (tab: string | null) => void;
+  setCurrentHoveredTab: (tab: LineTab | null) => void;
   activeStates: ReturnType<typeof useActiveStates>;
 }
 
 export function useDragHandlers({
   lineup,
   setLineup,
-  activeTab,
   setActiveTab,
   players,
   isPositionValid,
@@ -31,8 +32,8 @@ export function useDragHandlers({
 }: UseDragHandlersProps) {
   const { removePlayerFromLineup } = useLineupManipulation();
   const { handleTabHover } = useTabHandling({
-    setCurrentHoveredTab,
-    setActiveTab,
+    setCurrentHoveredTab: setCurrentHoveredTab as (tab: string | null) => void,
+    setActiveTab: setActiveTab as (tab: string) => void,
     setPreviewLineup: activeStates.setPreviewLineup,
   });
 
@@ -91,10 +92,10 @@ export function useDragHandlers({
     const overId = over.id.toString();
 
     if (overId.startsWith("tab-")) {
-      const targetLine = overId.replace("tab-", "");
+      const targetLine = overId.replace("tab-", "") as LineTab;
       if (active.id.toString().includes("line")) {
         const [, sourcePosition] = active.id.toString().split("-");
-        newLineup[targetLine as keyof LineupData][sourcePosition as Position] =
+        newLineup[targetLine][sourcePosition as Position] =
           activeStates.activePlayer;
       }
       console.log("Setting lineup after tab drop:", newLineup);
@@ -110,7 +111,7 @@ export function useDragHandlers({
           `${activeStates.activePlayer.name} cannot play as ${targetPosition}`
         );
       } else {
-        newLineup[targetLine as keyof LineupData][targetPosition as Position] =
+        newLineup[targetLine as LineTab][targetPosition as Position] =
           activeStates.activePlayer;
         console.log("Setting lineup after position drop:", newLineup);
         setLineup(newLineup);
@@ -118,12 +119,12 @@ export function useDragHandlers({
     }
 
     if (over) {
-      const [lineId, position] = over.id.toString().split("-");
+      const [, position] = over.id.toString().split("-");
 
       if (position === "G" && activeStates.activePlayer) {
         const updatedLineup = { ...newLineup };
 
-        Object.keys(updatedLineup).forEach((line) => {
+        (Object.keys(updatedLineup) as LineTab[]).forEach((line) => {
           updatedLineup[line].G = activeStates.activePlayer;
         });
 

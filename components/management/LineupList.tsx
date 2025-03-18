@@ -1,20 +1,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Position } from "@/types/positions"; // Import the Position type we defined earlier
 
 interface LineupListProps {
   teamId: string;
 }
 
-const standardPositions = {
+interface Player {
+  name: string;
+  number?: number;
+}
+
+interface LinePositions {
+  LW?: Player;
+  C?: Player;
+  RW?: Player;
+  LD?: Player;
+  RD?: Player;
+  G?: Player;
+}
+
+interface Lineup {
+  id: string;
+  name: string;
+  line1: LinePositions;
+  line2: LinePositions;
+  line3: LinePositions;
+  line4: LinePositions;
+}
+
+const standardPositions: Record<string, Position[]> = {
   line1: ["LW", "C", "RW", "LD", "RD", "G"],
   line2: ["LW", "C", "RW", "LD", "RD"],
   line3: ["LW", "C", "RW", "LD", "RD"],
   line4: ["LW", "C", "RW", "LD", "RD"],
-};
+} as const;
 
 export function LineupList({ teamId }: LineupListProps) {
-  const [lineups, setLineups] = useState([]);
+  const [lineups, setLineups] = useState<Lineup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +54,7 @@ export function LineupList({ teamId }: LineupListProps) {
         }
 
         const data = await response.json();
-        setLineups(data);
+        setLineups(data as Lineup[]);
         setError(null);
       } catch (error) {
         console.error("Error details:", error);
@@ -62,7 +86,7 @@ export function LineupList({ teamId }: LineupListProps) {
     <div className="space-y-6">
       {lineups.map((lineup, index) => (
         <div
-          key={`lineup-${index}`}
+          key={lineup.id || `lineup-${index}`}
           className="bg-[#0f172a] rounded-lg p-5 shadow-md border border-[#334155]/50 hover:border-blue-400/50 transition-all"
         >
           <div className="flex justify-between items-center mb-4 pb-2 border-b border-[#334155]/30">
@@ -73,16 +97,22 @@ export function LineupList({ teamId }: LineupListProps) {
           </div>
 
           <div className="space-y-4">
-            {["line1", "line2", "line3", "line4"].map((line) => {
-              const hasPlayers = Object.values(lineup[line] || {}).some(
-                (player) => player
+            {(
+              Object.keys(standardPositions) as Array<
+                keyof typeof standardPositions
+              >
+            ).map((line) => {
+              const linePositions =
+                lineup[line as keyof Lineup] || ({} as LinePositions);
+              const hasPlayers = Object.values(linePositions).some(
+                (player): player is Player => player !== undefined
               );
 
               if (!hasPlayers) return null;
 
               return (
                 <div
-                  key={`${line}-${index}`}
+                  key={`${line}-${lineup.id}`}
                   className="rounded-md bg-[#1e293b]/50 p-3"
                 >
                   <p className="font-medium capitalize text-blue-400 mb-2 text-sm">
@@ -90,11 +120,15 @@ export function LineupList({ teamId }: LineupListProps) {
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                     {standardPositions[line].map((position) => {
-                      const player = lineup[line]?.[position];
+                      const linePositions = lineup[
+                        line as keyof Lineup
+                      ] as LinePositions;
+                      const player =
+                        linePositions[position as keyof LinePositions];
 
                       return (
                         <div
-                          key={`${position}-${index}`}
+                          key={`${position}-${lineup.id}-${line}`}
                           className={`p-2 rounded border ${
                             player
                               ? "bg-[#0f172a]/70 border-[#334155]/30"

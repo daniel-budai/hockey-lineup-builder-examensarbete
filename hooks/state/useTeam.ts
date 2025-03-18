@@ -3,24 +3,43 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import type { Team } from "@/types/team";
 
+interface TeamResponse {
+  success: boolean;
+  teams?: Team[];
+  error?: string;
+}
+
+interface CreateTeamResponse {
+  success: boolean;
+  team?: Team;
+  error?: string;
+}
+
+type CreateTeamData = Omit<Team, "id" | "createdAt" | "updatedAt">;
+
 export function useTeam() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchTeams();
+    void fetchTeams();
   }, []);
 
-  const fetchTeams = async () => {
+  const fetchTeams = async (): Promise<void> => {
     try {
       setIsLoading(true);
       const response = await fetch("/api/teams");
-      const data = await response.json();
+      const data: TeamResponse = await response.json();
 
-      if (data.success) {
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch teams");
+      }
+
+      if (data.success && data.teams) {
         setTeams(data.teams);
         const savedTeamId = localStorage.getItem("selectedTeamId");
+
         if (savedTeamId) {
           const savedTeam = data.teams.find((team) => team._id === savedTeamId);
           if (savedTeam) {
@@ -28,28 +47,32 @@ export function useTeam() {
             return;
           }
         }
+
+        // Set first team as default if no saved team exists
         if (data.teams.length > 0 && !currentTeam) {
           setCurrentTeam(data.teams[0]);
         }
-      } else {
-        toast.error(data.error || "Failed to fetch teams");
       }
     } catch (error) {
-      toast.error("An error occurred while fetching teams");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An error occurred while fetching teams";
+      toast.error(errorMessage);
       console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSelectTeam = (team: Team) => {
+  const handleSelectTeam = (team: Team): void => {
     setCurrentTeam(team);
     localStorage.setItem("selectedTeamId", team._id);
   };
 
   const handleCreateTeam = async (
-    teamData: Omit<Team, "id" | "createdAt" | "updatedAt">
-  ) => {
+    teamData: CreateTeamData
+  ): Promise<boolean> => {
     try {
       const response = await fetch("/api/teams", {
         method: "POST",
@@ -59,18 +82,25 @@ export function useTeam() {
         body: JSON.stringify(teamData),
       });
 
-      const data = await response.json();
+      const data: CreateTeamResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create team");
+      }
 
       if (data.success) {
         toast.success("Team created successfully!");
-        fetchTeams();
+        void fetchTeams();
         return true;
-      } else {
-        toast.error(data.error || "Failed to create team");
-        return false;
       }
+
+      return false;
     } catch (error) {
-      toast.error("An error occurred while creating the team");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An error occurred while creating the team";
+      toast.error(errorMessage);
       console.error(error);
       return false;
     }
@@ -83,5 +113,5 @@ export function useTeam() {
     handleSelectTeam,
     handleCreateTeam,
     fetchTeams,
-  };
+  } as const; // Make the return type readonly
 }

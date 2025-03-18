@@ -18,6 +18,13 @@ export function ActionButtons({
   const { saveLineup } = useLineup();
   const { currentTeam } = useTeam();
 
+  const handleSaveLineup = () => {
+    if (!currentTeam) {
+      return;
+    }
+    saveLineup(currentTeam._id, currentTeam.name);
+  };
+
   return (
     <div className="grid grid-cols-2 sm:flex gap-2 sm:space-x-3">
       <Button
@@ -35,7 +42,8 @@ export function ActionButtons({
         Create Team
       </Button>
       <Button
-        onClick={() => saveLineup(currentTeam._id, currentTeam.name)}
+        onClick={handleSaveLineup}
+        disabled={!currentTeam}
         className="bg-white hover:bg-slate-100 text-[#0f172a] shadow-md hover:shadow-lg transition-all rounded-full"
       >
         <Save className="mr-2 h-4 w-4" />

@@ -1,14 +1,24 @@
-import { DndContext, DragOverlay } from "@dnd-kit/core";
+import {
+  DndContext,
+  DragOverlay,
+  DragStartEvent,
+  DragMoveEvent,
+  DragEndEvent,
+  SensorDescriptor,
+  SensorOptions,
+} from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { PlayerCard } from "./roster/player-card";
+import type { Player } from "@/types/player";
+import type { ReactNode } from "react";
 
 interface DndContextProviderProps {
-  children: React.ReactNode;
-  sensors: any[];
+  children: ReactNode;
+  sensors: SensorDescriptor<SensorOptions>[];
   activePlayer: Player | null;
-  onDragStart: (event: any) => void;
-  onDragMove: (event: any) => void;
-  onDragEnd: (event: any) => void;
+  onDragStart: (event: DragStartEvent) => void;
+  onDragMove: (event: DragMoveEvent) => void;
+  onDragEnd: (event: DragEndEvent) => void;
 }
 
 export function DndContextProvider({
