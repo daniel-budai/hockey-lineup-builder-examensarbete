@@ -78,7 +78,7 @@ export function LineupBuilder() {
 
     (Object.keys(newLineup) as LineNumber[]).forEach((lineKey) => {
       (Object.keys(newLineup[lineKey]) as Position[]).forEach((position) => {
-        if (newLineup[lineKey][position]?.id === playerId) {
+        if (newLineup[lineKey][position]?._id === playerId) {
           newLineup[lineKey][position] = null;
           changed = true;
         }

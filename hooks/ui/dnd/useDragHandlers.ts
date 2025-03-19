@@ -66,11 +66,6 @@ export function useDragHandlers({
       const [sourceLine] = active.id.toString().split("-");
 
       if (handleTabHover(tabLine, sourceLine)) {
-        const newLineup = removePlayerFromLineup(
-          lineup,
-          activeStates.activePlayer.id
-        );
-        activeStates.setPreviewLineup(newLineup);
       }
     } else {
       handleTabHover(null);
@@ -85,20 +80,40 @@ export function useDragHandlers({
       return;
     }
 
-    const newLineup = removePlayerFromLineup(
-      lineup,
-      activeStates.activePlayer.id
-    );
+    const newLineup = { ...lineup };
+    const activeId = active.id.toString();
     const overId = over.id.toString();
+
+    if (!activeId.includes("line")) {
+      let isPlayerAlreadyOnIce = false;
+      Object.keys(newLineup).forEach((line) => {
+        Object.values(newLineup[line as LineTab]).forEach((player) => {
+          if (player?._id === activeStates.activePlayer?._id) {
+            isPlayerAlreadyOnIce = true;
+          }
+        });
+      });
+
+      if (isPlayerAlreadyOnIce) {
+        toast.error(`Player is already on the ice`);
+        activeStates.resetActiveStates();
+        setCurrentHoveredTab(null);
+        return;
+      }
+    }
+
+    if (activeId.includes("line")) {
+      const [sourceLine, sourcePosition] = activeId.split("-");
+      newLineup[sourceLine as LineTab][sourcePosition as Position] = null;
+    }
 
     if (overId.startsWith("tab-")) {
       const targetLine = overId.replace("tab-", "") as LineTab;
-      if (active.id.toString().includes("line")) {
-        const [, sourcePosition] = active.id.toString().split("-");
+      if (activeId.includes("line")) {
+        const [, sourcePosition] = activeId.split("-");
         newLineup[targetLine][sourcePosition as Position] =
           activeStates.activePlayer;
       }
-      console.log("Setting lineup after tab drop:", newLineup);
       setLineup(newLineup);
       setActiveTab(targetLine);
     } else if (overId.includes("-")) {
@@ -107,33 +122,21 @@ export function useDragHandlers({
       if (
         !isPositionValid(activeStates.activePlayer, targetPosition as Position)
       ) {
-        toast.error(
-          `${activeStates.activePlayer.name} cannot play as ${targetPosition}`
-        );
+        toast.error(`Player cannot play as ${targetPosition}`);
       } else {
         newLineup[targetLine as LineTab][targetPosition as Position] =
           activeStates.activePlayer;
-        console.log("Setting lineup after position drop:", newLineup);
         setLineup(newLineup);
       }
     }
 
-    if (over) {
-      const [, position] = over.id.toString().split("-");
-
-      if (position === "G" && activeStates.activePlayer) {
-        const updatedLineup = { ...newLineup };
-
-        (Object.keys(updatedLineup) as LineTab[]).forEach((line) => {
-          updatedLineup[line].G = activeStates.activePlayer;
-        });
-
-        setLineup(updatedLineup);
-      } else {
-        setLineup(newLineup);
-      }
+    if (overId.split("-")[1] === "G" && activeStates.activePlayer) {
+      Object.keys(newLineup).forEach((line) => {
+        newLineup[line as LineTab].G = activeStates.activePlayer;
+      });
     }
 
+    setLineup(newLineup);
     activeStates.resetActiveStates();
     setCurrentHoveredTab(null);
   }
