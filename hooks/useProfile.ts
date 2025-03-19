@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-
-interface ProfileData {
-  name: string;
-  email: string;
-  createdAt: string;
-  avatarUrl?: string;
-}
+import { userService } from "@/services/api/userService";
+import type { ProfileData } from "@/services/api/userService";
 
 export function useProfile() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -16,13 +11,10 @@ export function useProfile() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch("/api/auth/user/profile");
-      if (!response.ok) throw new Error("Failed to fetch profile");
-      const data = await response.json();
-
+      const data = await userService.getProfile();
       setProfileData({
         ...data,
-        avatarUrl: "https://ui.shadcn.com/avatars/01.png", // ha kvar denna tills vidare ska ändra implementera bilder någongång
+        avatarUrl: "https://ui.shadcn.com/avatars/01.png",
         joinedDate: new Date(data.createdAt).toLocaleDateString(),
       });
     } catch (error) {
@@ -59,34 +51,14 @@ export function useProfile() {
     }));
   };
 
-  // Save changes
   const saveChanges = async () => {
     if (!editForm) return false;
 
     try {
-      const success = await updateProfile(editForm);
-      if (success) {
-        setIsEditing(false);
-        setEditForm({});
-      }
-      return success;
-    } catch (error) {
-      console.error(error);
-      return false;
-    }
-  };
-
-  const updateProfile = async (updates: Partial<ProfileData>) => {
-    try {
-      const response = await fetch("/api/auth/user/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) throw new Error("Failed to update profile");
-
+      await userService.updateProfile(editForm);
       await fetchProfile();
+      setIsEditing(false);
+      setEditForm({});
       toast.success("Profile updated successfully");
       return true;
     } catch (error) {

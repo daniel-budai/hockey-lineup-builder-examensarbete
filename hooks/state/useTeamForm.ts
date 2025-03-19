@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { teamService } from "@/services/api/teamService";
 import { teamSchema } from "@/schemas/team.schema";
 import type { Team } from "@/types/team";
 
@@ -60,40 +61,29 @@ export function useTeamForm() {
 
   const handleSubmit = async (onTeamCreated?: (team: Team) => void) => {
     if (!validateForm()) return;
-
     setIsSubmitting(true);
 
-    const teamData = {
-      ...formData,
-      abbreviation: formData.abbreviation.toUpperCase(),
-      foundedYear: formData.foundedYear
-        ? Number(formData.foundedYear)
-        : undefined,
-      logoUrl: undefined,
-    };
-
     try {
-      const response = await fetch("/api/teams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(teamData),
-      });
+      const teamData = {
+        ...formData,
+        abbreviation: formData.abbreviation.toUpperCase(),
+        foundedYear: formData.foundedYear
+          ? Number(formData.foundedYear)
+          : undefined,
+        logoUrl: undefined,
+      };
 
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success("Team created successfully!");
-        if (onTeamCreated && data.team) {
-          onTeamCreated(data.team);
-        }
-        return true;
-      } else {
-        toast.error(data.error || "Failed to create team");
-        return false;
+      const team = await teamService.createTeam(teamData);
+      toast.success("Team created successfully!");
+      if (onTeamCreated) {
+        onTeamCreated(team);
       }
+      return true;
     } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create team"
+      );
       console.error("Error creating team:", error);
-      toast.error("An error occurred while creating the team");
       return false;
     } finally {
       setIsSubmitting(false);

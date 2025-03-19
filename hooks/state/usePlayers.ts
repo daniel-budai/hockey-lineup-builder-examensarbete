@@ -33,12 +33,20 @@ export function usePlayers(): UsePlayersReturn {
   const [players, setPlayers] = useState<Player[]>(() => {
     if (typeof window !== "undefined") {
       const teamId = localStorage.getItem("selectedTeamId");
-      const savedPlayers = localStorage.getItem(`hockey-players-${teamId}`);
-      if (savedPlayers) {
-        try {
-          return JSON.parse(savedPlayers);
-        } catch (error) {
-          console.error("Failed to parse saved players:", error);
+      console.log("Initializing with teamId:", teamId);
+
+      if (teamId) {
+        const savedPlayers = localStorage.getItem(`hockey-players-${teamId}`);
+        console.log("Found saved players:", savedPlayers);
+
+        if (savedPlayers) {
+          try {
+            const parsed = JSON.parse(savedPlayers);
+            console.log("Parsed players:", parsed);
+            return parsed;
+          } catch (error) {
+            console.error("Failed to parse saved players:", error);
+          }
         }
       }
     }
@@ -53,10 +61,17 @@ export function usePlayers(): UsePlayersReturn {
     const teamId = localStorage.getItem("selectedTeamId");
     if (teamId) {
       localStorage.setItem(`hockey-players-${teamId}`, JSON.stringify(players));
+      console.log("Saved players to localStorage:", players);
     }
   }, [players]);
 
   const handleAddPlayer = (player: Omit<Player, "id">): boolean => {
+    const teamId = localStorage.getItem("selectedTeamId");
+    if (!teamId) {
+      toast.error("No team selected");
+      return false;
+    }
+
     const isNumberTaken = players.some((p) => p.number === player.number);
     if (isNumberTaken) {
       toast.error(`Jersey number ${player.number} is already taken`);
@@ -68,10 +83,18 @@ export function usePlayers(): UsePlayersReturn {
       id: `p${Date.now()}`,
     };
 
-    setPlayers((prev) => [...prev, newPlayer]);
+    setPlayers((prevPlayers) => {
+      const newPlayers = [...prevPlayers, newPlayer];
+      return newPlayers;
+    });
+
     toast.success(`${player.name} has been added to the roster`);
     return true;
   };
+
+  useEffect(() => {
+    console.log("Players state updated:", players);
+  }, [players]);
 
   const handleRemovePlayer = (playerId: string): void => {
     setPlayers((prev) => prev.filter((p) => p.id !== playerId));
