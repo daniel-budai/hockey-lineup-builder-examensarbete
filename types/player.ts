@@ -24,13 +24,13 @@ export interface Player {
   _id: string;
   firstName: string;
   lastName: string;
-  number: string; // Changed to string to match schema
+  number: string;
   positions: Position[];
   teamId: string;
   nationality?: string;
   birthplace?: string;
   birthdate?: string;
-  age?: string; // Changed to string to match schema
+  age?: string;
   heightCm?: string;
   heightFt?: string;
   heightIn?: string;
@@ -40,9 +40,16 @@ export interface Player {
   isDefense: boolean;
   isGoalie: boolean;
   stats?: {
-    goals: number;
-    assists: number;
-    gamesPlayed: number;
+    // Field player stats
+    goals?: number;
+    assists?: number;
+    points?: number;
+    plusMinus?: number;
+    gamesPlayed?: number;
+
+    // Goalie stats
+    savePercentage?: number;
+    goalsAgainstAverage?: number;
   };
   createdAt?: Date;
   updatedAt?: Date;

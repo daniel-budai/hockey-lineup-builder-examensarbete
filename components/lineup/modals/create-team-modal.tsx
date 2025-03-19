@@ -15,7 +15,8 @@ import { TeamBasicInfo } from "./sections/teamSections/TeamBasicInfo";
 import { TeamLocationInfo } from "./sections/teamSections/TeamLocationInfo";
 import { TeamDetailsInfo } from "./sections/teamSections/TeamDetailsInfo";
 import { TeamColorsSection } from "./sections/teamSections/TeamColorsSection";
-import { TeamPreview } from "./sections/teamSections/TeamPreview";
+import { TeamPreview } from "@/components/lineup/modals/sections/teamSections/TeamPreview";
+import type { TeamFormData } from "@/types/team";
 
 interface CreateTeamModalProps {
   open: boolean;
@@ -42,6 +43,10 @@ export function CreateTeamModal({
       resetForm();
     }
     onOpenChange(open);
+  };
+
+  const handleFormChange = (data: Partial<TeamFormData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
   };
 
   const generateAbbreviation = (teamName: string) => {
@@ -77,17 +82,20 @@ export function CreateTeamModal({
           <div className="grid gap-6 py-4">
             <TeamBasicInfo
               formData={formData}
-              onChange={setFormData}
+              onChange={handleFormChange}
               errors={errors}
               generateAbbreviation={generateAbbreviation}
             />
-            <TeamLocationInfo formData={formData} onChange={setFormData} />
+            <TeamLocationInfo formData={formData} onChange={handleFormChange} />
             <TeamDetailsInfo
               formData={formData}
-              onChange={setFormData}
+              onChange={handleFormChange}
               errors={errors}
             />
-            <TeamColorsSection formData={formData} onChange={setFormData} />
+            <TeamColorsSection
+              formData={formData}
+              onChange={handleFormChange}
+            />
             <TeamPreview formData={formData} />
           </div>
         </ScrollArea>

@@ -15,17 +15,14 @@ import { PhysicalInfoSection } from "@/components/lineup/modals/sections/Physica
 import { PlayerPositionSection } from "@/components/lineup/modals/sections/PlayerPositionSection";
 import type { Player } from "@/types/player";
 import type { PlayerFormData } from "@/schemas/player.schema";
-import type { Dispatch, SetStateAction } from "react";
-import { toast } from "sonner";
 
 interface AddPlayerModalProps {
   open: boolean;
-  onOpenChange: Dispatch<SetStateAction<boolean>>;
-  onAddPlayer: (player: Omit<Player, "id">) => boolean;
+  onOpenChange: (open: boolean) => void;
+  onAddPlayer: (player: Omit<Player, "id">) => Promise<boolean>;
 }
 
 type HandleOpenChangeFunction = (open: boolean) => void;
-type HandleSubmitFunction = () => void;
 
 export function AddPlayerModal({
   open,
@@ -44,7 +41,6 @@ export function AddPlayerModal({
     handlePositionTypeChange,
     handlePositionChange,
     validateForm,
-    createPlayerObject,
     resetForm,
   } = usePlayerForm();
 
@@ -55,32 +51,12 @@ export function AddPlayerModal({
     onOpenChange(open);
   };
 
-  const handleSubmit: HandleSubmitFunction = () => {
-    console.log("Submit button clicked");
-
-    const teamId = localStorage.getItem("selectedTeamId");
-    console.log("TeamId from localStorage:", teamId);
-
-    if (!teamId) {
-      toast.error("No team selected");
-      return;
-    }
-
-    const playerWithTeam = {
-      ...formData,
-      teamId,
-    };
-
-    if (!validateForm(playerWithTeam)) {
-      console.log("Form validation failed");
-      return;
-    }
-
-    console.log("Final player data:", playerWithTeam);
-    const success = onAddPlayer(playerWithTeam);
-
-    if (success) {
-      handleOpenChange(false);
+  const handleSubmit = async () => {
+    if (validateForm()) {
+      const success = await onAddPlayer(formData as Omit<Player, "id">);
+      if (success) {
+        onOpenChange(false);
+      }
     }
   };
 

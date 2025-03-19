@@ -6,8 +6,12 @@ interface PlayerStatsProps {
   positions: Position[];
 }
 
+type NonNullStats = NonNullable<Player["stats"]>;
+
 export function PlayerStats({ stats, positions }: PlayerStatsProps) {
   if (!stats || Object.keys(stats).length === 0) return null;
+
+  const validStats: NonNullStats = stats;
 
   return (
     <div>
@@ -16,19 +20,19 @@ export function PlayerStats({ stats, positions }: PlayerStatsProps) {
       </h3>
       <div className="grid grid-cols-3 gap-4">
         {positions?.includes("G") ? (
-          <GoalieStats stats={stats} />
+          <GoalieStats stats={validStats} />
         ) : (
-          <PlayerFieldStats stats={stats} />
+          <PlayerFieldStats stats={validStats} />
         )}
-        {stats.gamesPlayed !== undefined && (
-          <StatField label="Games Played" value={stats.gamesPlayed} />
+        {validStats.gamesPlayed !== undefined && (
+          <StatField label="Games Played" value={validStats.gamesPlayed} />
         )}
       </div>
     </div>
   );
 }
 
-function GoalieStats({ stats }: { stats: Player["stats"] }) {
+function GoalieStats({ stats }: { stats: NonNullStats }) {
   return (
     <>
       {stats.savePercentage !== undefined && (
@@ -44,7 +48,7 @@ function GoalieStats({ stats }: { stats: Player["stats"] }) {
   );
 }
 
-function PlayerFieldStats({ stats }: { stats: Player["stats"] }) {
+function PlayerFieldStats({ stats }: { stats: NonNullStats }) {
   return (
     <>
       {stats.goals !== undefined && (

@@ -1,21 +1,5 @@
 import mongoose from "mongoose";
 
-const PlayerSchema = new mongoose.Schema({
-  name: String,
-  number: Number,
-  positions: [String],
-  nationality: String,
-  birthdate: Date,
-  height: {
-    cm: Number,
-    imperial: String,
-  },
-  weight: {
-    kg: Number,
-    lbs: Number,
-  },
-});
-
 const LineSchema = new mongoose.Schema({
   LW: { type: mongoose.Schema.Types.ObjectId, ref: "Player" },
   C: { type: mongoose.Schema.Types.ObjectId, ref: "Player" },

@@ -50,13 +50,11 @@ export function RegisterForm() {
         const errorData = await response.json();
         console.error("Registration error details:", errorData);
 
-        // More detailed logging of validation issues
         if (errorData.issues && errorData.issues.length > 0) {
           console.error(
             "Validation issues:",
             JSON.stringify(errorData.issues, null, 2)
           );
-          // Display the first validation error as a toast
           const firstIssue = errorData.issues[0];
           toast.error(
             `Validation error: ${firstIssue.path.join(".")} - ${

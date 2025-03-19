@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayerRoster } from "@/components/lineup/builder/roster/player-roster";
 import { usePlayers } from "@/hooks/state/usePlayers";
-import { useLineup } from "@/hooks/state/useLineup";
 import type { Player } from "@/types/player";
 import type { Position } from "@/types/positions";
 
@@ -22,7 +21,6 @@ export function RosterContainer({
   onRemovePlayer,
 }: RosterContainerProps) {
   const { searchQuery, setSearchQuery, filterTab, setFilterTab } = usePlayers();
-  const { lineup } = useLineup();
 
   console.log("Players in roster:", allPlayers); // Debug log
 
@@ -78,7 +76,7 @@ export function RosterContainer({
         defaultValue="all"
         className="w-full"
         value={filterTab}
-        onValueChange={(value: FilterTab) => setFilterTab(value)}
+        onValueChange={(value) => setFilterTab(value as FilterTab)}
       >
         <div className="px-4 pt-2">
           <TabsList className="w-full grid grid-cols-4 bg-[#0f172a]/50 rounded-full p-1">
