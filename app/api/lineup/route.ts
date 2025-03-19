@@ -107,7 +107,10 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error("Error in GET /api/lineup:", error);
     return NextResponse.json(
-      { error: "Failed to fetch lineups", details: error.message },
+      {
+        error: "Failed to fetch lineups",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

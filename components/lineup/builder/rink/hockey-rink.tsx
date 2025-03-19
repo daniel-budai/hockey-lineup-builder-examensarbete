@@ -25,7 +25,7 @@ export function HockeyRink({ line, lineNumber }: HockeyRinkProps) {
   return (
     <div className="hockey-rink w-full max-w-[100%] sm:max-w-[700px] mx-auto aspect-[3/4] bg-[#e2e8f0] relative border-2 border-white overflow-hidden rounded-[40px] sm:rounded-[30px] xs:rounded-[20px]">
       {/* Goal creases */}
-      <div className="absolute left-1/2 top-0 h-8 sm:h-10 md:h-12 w-16 sm:w-20 md:w-24 border-2 border-[#334155] rounded-b-full -translate-x-1/2" />
+      {/* <div className="absolute left-1/2 top-0 h-8 sm:h-10 md:h-12 w-16 sm:w-20 md:w-24 border-2 border-[#334155] rounded-b-full -translate-x-1/2" /> */}
       <div className="absolute left-1/2 bottom-0 h-8 sm:h-10 md:h-12 w-16 sm:w-20 md:w-24 border-2 border-[#334155] rounded-t-full -translate-x-1/2" />
 
       {/* Player positions - Forward line */}

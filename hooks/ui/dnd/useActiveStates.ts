@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { Player, LineupData } from "@/types/lineup";
+import type { LineupData } from "@/types/lineup";
+import type { Player } from "@/types/player";
 
 export function useActiveStates() {
   const [activePlayer, setActivePlayer] = useState<Player | null>(null);

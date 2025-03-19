@@ -53,7 +53,7 @@ export function PlayerCard({
   }
 
   const isGoalie = player.positions.includes("G" as Position);
-  const age = calculateAge(player.birthdate);
+  const age = player.birthdate ? calculateAge(player.birthdate) : "";
 
   return (
     <div

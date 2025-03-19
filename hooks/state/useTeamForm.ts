@@ -2,22 +2,18 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { teamService } from "@/services/api/teamService";
 import { teamSchema } from "@/schemas/team.schema";
-import type { Team } from "@/types/team";
+import type { Team, TeamFormData } from "@/types/team";
 
-export interface TeamFormData {
-  name: string;
-  abbreviation: string;
-  city: string;
-  country: string;
-  foundedYear: string;
-  arena: string;
-  division: string;
-  conference: string;
-  primaryColor: string;
-  secondaryColor: string;
+interface UseTeamFormReturn {
+  formData: TeamFormData;
+  setFormData: React.Dispatch<React.SetStateAction<TeamFormData>>;
+  errors: Record<string, string>;
+  isSubmitting: boolean;
+  handleSubmit: (callback?: (team: Team) => void) => Promise<boolean>;
+  resetForm: () => void;
 }
 
-export function useTeamForm() {
+export function useTeamForm(): UseTeamFormReturn {
   const [formData, setFormData] = useState<TeamFormData>({
     name: "",
     abbreviation: "",
@@ -59,17 +55,17 @@ export function useTeamForm() {
     return true;
   };
 
-  const handleSubmit = async (onTeamCreated?: (team: Team) => void) => {
-    if (!validateForm()) return;
+  const handleSubmit = async (
+    onTeamCreated?: (team: Team) => void
+  ): Promise<boolean> => {
+    if (!validateForm()) return false;
     setIsSubmitting(true);
 
     try {
       const teamData = {
         ...formData,
         abbreviation: formData.abbreviation.toUpperCase(),
-        foundedYear: formData.foundedYear
-          ? Number(formData.foundedYear)
-          : undefined,
+        foundedYear: formData.foundedYear || undefined,
         logoUrl: undefined,
       };
 

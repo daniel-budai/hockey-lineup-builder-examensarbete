@@ -1,9 +1,10 @@
 import { TeamFormField } from "../../form-fields/TeamFormField";
 import { Input } from "@/components/ui/input";
+import { TeamFormData } from "@/types/team";
 
 interface TeamBasicInfoProps {
-  formData: any;
-  onChange: (data: any) => void;
+  formData: Partial<TeamFormData>;
+  onChange: (data: Partial<TeamFormData>) => void;
   errors: Record<string, string>;
   generateAbbreviation: (name: string) => string;
 }
@@ -24,18 +25,21 @@ export function TeamBasicInfo({
       >
         <Input
           id="name"
-          value={formData.name}
+          value={formData.name ?? ""}
           onChange={(e) => {
-            onChange({ ...formData, name: e.target.value });
+            const newValue = e.target.value;
             if (
               !formData.abbreviation ||
-              formData.abbreviation === generateAbbreviation(formData.name)
+              formData.abbreviation ===
+                generateAbbreviation(formData.name ?? "")
             ) {
               onChange({
                 ...formData,
-                name: e.target.value,
-                abbreviation: generateAbbreviation(e.target.value),
+                name: newValue,
+                abbreviation: generateAbbreviation(newValue),
               });
+            } else {
+              onChange({ ...formData, name: newValue });
             }
           }}
           className="bg-[#0f172a]/80 border-[#334155] text-white"
@@ -51,7 +55,7 @@ export function TeamBasicInfo({
       >
         <Input
           id="abbreviation"
-          value={formData.abbreviation}
+          value={formData.abbreviation ?? ""}
           onChange={(e) =>
             onChange({ ...formData, abbreviation: e.target.value })
           }

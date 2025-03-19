@@ -8,7 +8,7 @@ export const teamSchema = z.object({
     .max(3, "Abbreviation must be 3 characters or less"),
   city: z.string().optional(),
   country: z.string().optional(),
-  foundedYear: z
+  foundedYear: z.coerce
     .number()
     .min(1800, "Year must be at least 1800")
     .max(new Date().getFullYear(), "Year cannot be in the future")

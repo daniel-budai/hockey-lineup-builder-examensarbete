@@ -3,6 +3,14 @@ import { toast } from "sonner";
 import { userService } from "@/services/api/userService";
 import type { ProfileData } from "@/services/api/userService";
 
+// First, define the type for the save data
+interface SaveChangesData {
+  name: string;
+  email: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
 export function useProfile() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,19 +59,18 @@ export function useProfile() {
     }));
   };
 
-  const saveChanges = async () => {
-    if (!editForm) return false;
-
+  const saveChanges = async (data: SaveChangesData) => {
     try {
-      await userService.updateProfile(editForm);
+      // Your save logic here using the data parameter
+      // For example:
+      await userService.updateProfile(data);
       await fetchProfile();
-      setIsEditing(false);
-      setEditForm({});
+      cancelEditing();
       toast.success("Profile updated successfully");
       return true;
     } catch (error) {
       toast.error("Failed to update profile");
-      console.error(error);
+      console.error("Failed to save changes:", error);
       return false;
     }
   };

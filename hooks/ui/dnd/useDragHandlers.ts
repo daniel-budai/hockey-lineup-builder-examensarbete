@@ -7,7 +7,7 @@ import type { Player } from "@/types/player";
 import type { Position } from "@/types/positions";
 import type { LineTab, LineupData } from "@/types/lineup";
 import { toast } from "sonner";
-import { useLineupManipulation } from "./useLineupManipulation";
+// import { useLineupManipulation } from "./useLineupManipulation";
 import { useTabHandling } from "./useTabHandling";
 import { useActiveStates } from "./useActiveStates";
 
@@ -30,7 +30,7 @@ export function useDragHandlers({
   setCurrentHoveredTab,
   activeStates,
 }: UseDragHandlersProps) {
-  const { removePlayerFromLineup } = useLineupManipulation();
+  // const { removePlayerFromLineup } = useLineupManipulation();
   const { handleTabHover } = useTabHandling({
     setCurrentHoveredTab: setCurrentHoveredTab as (tab: string | null) => void,
     setActiveTab: setActiveTab as (tab: string) => void,
