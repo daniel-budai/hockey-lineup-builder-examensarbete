@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { playerFormSchema } from "@/schemas/player.schema";
-import mongoose from "mongoose";
 
 export async function GET(request: Request) {
   try {
