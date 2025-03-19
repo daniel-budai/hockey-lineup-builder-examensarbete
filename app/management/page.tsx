@@ -3,24 +3,18 @@
 import { useTeam } from "@/hooks/state/useTeam";
 import { TeamList } from "@/components/management/TeamList";
 import { LineupList } from "@/components/management/LineupList";
-// import { CreateTeamModal } from "@/components/lineup/builder/team/create-team-modal";
 import { CreateTeamModal } from "@/components//lineup/modals/create-team-modal";
 import { useState } from "react";
-import { useCreateTeam } from "@/hooks/useCreateTeam";
 import { Header } from "@/components/layout";
+import type { Team } from "@/types/team";
 
 export default function ManagementPage() {
   const { teams, currentTeam, isLoading, handleSelectTeam, fetchTeams } =
     useTeam();
   const [createTeamOpen, setCreateTeamOpen] = useState(false);
-  const { handleCreateTeam: createTeamHookHandleCreateTeam } = useCreateTeam();
 
-  // Handle when a team is created
-  const handleTeamCreated = (team) => {
-    // Refresh the teams list
+  const handleTeamCreated = (team: Team) => {
     fetchTeams();
-
-    // Optionally select the newly created team
     handleSelectTeam(team);
   };
 

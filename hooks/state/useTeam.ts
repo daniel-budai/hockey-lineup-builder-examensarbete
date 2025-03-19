@@ -1,80 +1,74 @@
 // @/hooks/state/useTeam.ts
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { teamService } from "@/services/api/teamService";
 import type { Team } from "@/types/team";
+
+type CreateTeamData = Omit<Team, "id" | "createdAt" | "updatedAt">;
 
 export function useTeam() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchTeams();
-  }, []);
-
-  const fetchTeams = async () => {
+  const fetchTeams = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/teams");
-      const data = await response.json();
+      const fetchedTeams = await teamService.getTeams();
+      setTeams(fetchedTeams);
 
-      if (data.success) {
-        setTeams(data.teams);
-        const savedTeamId = localStorage.getItem("selectedTeamId");
-        if (savedTeamId) {
-          const savedTeam = data.teams.find((team) => team._id === savedTeamId);
-          if (savedTeam) {
-            setCurrentTeam(savedTeam);
-            return;
-          }
+      const savedTeamId = localStorage.getItem("selectedTeamId");
+      if (savedTeamId) {
+        const savedTeam = fetchedTeams.find((team) => team._id === savedTeamId);
+        if (savedTeam) {
+          setCurrentTeam(savedTeam);
+          localStorage.setItem("selectedTeamId", savedTeam._id);
+          return;
         }
-        if (data.teams.length > 0 && !currentTeam) {
-          setCurrentTeam(data.teams[0]);
-        }
-      } else {
-        toast.error(data.error || "Failed to fetch teams");
+      }
+
+      if (fetchedTeams.length > 0) {
+        const defaultTeam = fetchedTeams[0];
+        setCurrentTeam(defaultTeam);
+        localStorage.setItem("selectedTeamId", defaultTeam._id);
       }
     } catch (error) {
-      toast.error("An error occurred while fetching teams");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to fetch teams"
+      );
       console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSelectTeam = (team: Team) => {
+  const handleSelectTeam = (team: Team): void => {
+    console.log("Selecting team:", team);
     setCurrentTeam(team);
     localStorage.setItem("selectedTeamId", team._id);
+    console.log("Stored teamId:", localStorage.getItem("selectedTeamId"));
   };
 
   const handleCreateTeam = async (
-    teamData: Omit<Team, "id" | "createdAt" | "updatedAt">
-  ) => {
+    teamData: CreateTeamData
+  ): Promise<boolean> => {
     try {
-      const response = await fetch("/api/teams", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(teamData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success("Team created successfully!");
-        fetchTeams();
-        return true;
-      } else {
-        toast.error(data.error || "Failed to create team");
-        return false;
-      }
+      await teamService.createTeam(teamData);
+      toast.success("Team created successfully!");
+      void fetchTeams();
+      return true;
     } catch (error) {
-      toast.error("An error occurred while creating the team");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create team"
+      );
       console.error(error);
       return false;
     }
   };
+
+  useEffect(() => {
+    void fetchTeams();
+  }, []);
 
   return {
     teams,
@@ -83,5 +77,5 @@ export function useTeam() {
     handleSelectTeam,
     handleCreateTeam,
     fetchTeams,
-  };
+  } as const;
 }

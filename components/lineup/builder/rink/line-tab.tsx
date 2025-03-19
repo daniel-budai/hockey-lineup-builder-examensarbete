@@ -1,12 +1,13 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
+import type { LineNumber } from "@/types/lineup";
 
 interface LineTabProps {
-  line: string;
+  line: LineNumber;
   index: number;
-  activeTab: string;
-  hoveredTab: string | null;
+  activeTab: LineNumber;
+  hoveredTab: LineNumber | null;
   onClick: () => void;
 }
 
@@ -19,6 +20,10 @@ export function LineTab({
 }: LineTabProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `tab-${line}`,
+    data: {
+      type: "TAB",
+      lineNumber: line,
+    },
   });
 
   // Determine if this tab should appear active (either it's the selected tab or being hovered during drag)

@@ -17,12 +17,12 @@ const PlayerSchema = new mongoose.Schema({
 });
 
 const LineSchema = new mongoose.Schema({
-  LW: PlayerSchema,
-  C: PlayerSchema,
-  RW: PlayerSchema,
-  LD: PlayerSchema,
-  RD: PlayerSchema,
-  G: PlayerSchema,
+  LW: { type: mongoose.Schema.Types.ObjectId, ref: "Player" },
+  C: { type: mongoose.Schema.Types.ObjectId, ref: "Player" },
+  RW: { type: mongoose.Schema.Types.ObjectId, ref: "Player" },
+  LD: { type: mongoose.Schema.Types.ObjectId, ref: "Player" },
+  RD: { type: mongoose.Schema.Types.ObjectId, ref: "Player" },
+  G: { type: mongoose.Schema.Types.ObjectId, ref: "Player" },
 });
 
 const LineupSchema = new mongoose.Schema({

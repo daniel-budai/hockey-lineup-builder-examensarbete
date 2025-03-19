@@ -1,4 +1,3 @@
-// @/components/lineup/builder/roster/roster-container.tsx
 import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayerRoster } from "@/components/lineup/builder/roster/player-roster";
 import { usePlayers } from "@/hooks/state/usePlayers";
 import { useLineup } from "@/hooks/state/useLineup";
-import { PlayerCard } from "@/components/lineup/builder/roster/player-card";
+import type { Player } from "@/types/player";
+import type { Position } from "@/types/positions";
+
+type FilterTab = "all" | "forwards" | "defense" | "goalies";
 
 interface RosterContainerProps {
   players: Player[];
@@ -22,24 +24,26 @@ export function RosterContainer({
   const { searchQuery, setSearchQuery, filterTab, setFilterTab } = usePlayers();
   const { lineup } = useLineup();
 
+  console.log("Players in roster:", allPlayers); // Debug log
+
   const filteredPlayers = allPlayers.filter((player) => {
+    const searchLower = searchQuery.toLowerCase();
+    const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();
+
     const matchesSearch =
-      player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      player.positions?.some((pos) =>
-        pos.toLowerCase().includes(searchQuery.toLowerCase())
+      fullName.includes(searchLower) ||
+      player.positions.some((pos: Position) =>
+        pos.toLowerCase().includes(searchLower)
       ) ||
-      (player.nationality &&
-        player.nationality.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (player.nationality?.toLowerCase() || "").includes(searchLower) ||
       player.number.toString().includes(searchQuery);
 
     if (!matchesSearch) return false;
 
     if (filterTab === "all") return true;
-    if (filterTab === "forwards")
-      return player.positions?.some((pos) => ["LW", "C", "RW"].includes(pos));
-    if (filterTab === "defense")
-      return player.positions?.some((pos) => ["LD", "RD"].includes(pos));
-    if (filterTab === "goalies") return player.positions?.includes("G");
+    if (filterTab === "forwards") return player.isForward;
+    if (filterTab === "defense") return player.isDefense;
+    if (filterTab === "goalies") return player.isGoalie;
 
     return true;
   });
@@ -74,7 +78,7 @@ export function RosterContainer({
         defaultValue="all"
         className="w-full"
         value={filterTab}
-        onValueChange={setFilterTab}
+        onValueChange={(value: FilterTab) => setFilterTab(value)}
       >
         <div className="px-4 pt-2">
           <TabsList className="w-full grid grid-cols-4 bg-[#0f172a]/50 rounded-full p-1">

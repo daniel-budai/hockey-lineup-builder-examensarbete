@@ -1,11 +1,24 @@
 "use client";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { PlayerCard } from "@/components/lineup/builder/roster/player-card";
-import type { LineConfiguration, Position, Player } from "@/types/lineup";
+import type { LineConfiguration, LineNumber } from "@/types/lineup";
+import type { Position } from "@/types/positions";
+import type { Player } from "@/types/player";
 
 interface HockeyRinkProps {
   line: LineConfiguration;
   lineNumber: number;
+}
+
+interface PositionDroppableProps {
+  id: string;
+  position: Position;
+  player: Player | null;
+}
+
+interface DraggablePlayerCardProps {
+  id: string;
+  player: Player;
 }
 
 export function HockeyRink({ line, lineNumber }: HockeyRinkProps) {
@@ -60,15 +73,14 @@ export function HockeyRink({ line, lineNumber }: HockeyRinkProps) {
   );
 }
 
-interface PositionDroppableProps {
-  id: string;
-  position: Position;
-  player: Player | null;
-}
-
 function PositionDroppable({ id, position, player }: PositionDroppableProps) {
   const { setNodeRef, isOver } = useDroppable({
     id,
+    data: {
+      type: "POSITION",
+      position,
+      lineNumber: id.split("-")[0] as LineNumber,
+    },
   });
 
   return (
@@ -91,14 +103,15 @@ function PositionDroppable({ id, position, player }: PositionDroppableProps) {
   );
 }
 
-interface DraggablePlayerCardProps {
-  id: string;
-  player: Player;
-}
-
 function DraggablePlayerCard({ id, player }: DraggablePlayerCardProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id,
+    data: {
+      type: "PLAYER",
+      player,
+      position: id.split("-")[1] as Position,
+      lineNumber: id.split("-")[0] as LineNumber,
+    },
   });
 
   return (

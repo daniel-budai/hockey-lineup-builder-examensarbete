@@ -1,103 +1,104 @@
 // @/hooks/state/usePlayers.ts
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import type { Player } from "@/types/lineup";
+import { playerService } from "@/services/api/playerService";
+import type { Player } from "@/types/player";
+import type { LineupData, LineConfiguration } from "@/types/lineup";
+import type { Dispatch, SetStateAction } from "react";
+import { usePlayerFilters } from "./usePlayerFilters";
+import { usePlayerActions } from "./usePlayerActions";
+import { useLineupStorage } from "./useLineupStorage";
+import { usePlayerDetails } from "./usePlayerDetails";
 
-export function usePlayers() {
-  const [players, setPlayers] = useState<Player[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedPlayers = localStorage.getItem("hockey-players");
-      if (savedPlayers) {
-        try {
-          return JSON.parse(savedPlayers);
-        } catch (error) {
-          console.error("Failed to parse saved players:", error);
-        }
-      }
-    }
-    return [];
-  });
+type FilterTabType = "all" | "forwards" | "defense" | "goalies";
+
+interface UsePlayersReturn {
+  readonly players: Player[];
+  readonly isLoading: boolean;
+  readonly searchQuery: string;
+  readonly setSearchQuery: (query: string) => void;
+  readonly filterTab: FilterTabType;
+  readonly setFilterTab: (tab: FilterTabType) => void;
+  readonly selectedPlayer: Player | null;
+  readonly setSelectedPlayer: (player: Player | null) => void;
+  readonly handleAddPlayer: (player: Omit<Player, "id">) => Promise<boolean>;
+  readonly handleRemovePlayer: (playerId: string) => void;
+  readonly getAvailablePlayers: (lineup: LineupData) => Player[];
+  readonly handleViewPlayerDetails: (
+    player: Player,
+    setModalOpen: Dispatch<SetStateAction<boolean>>
+  ) => void;
+  readonly handlePlayerDrop: (
+    playerId: string,
+    position: string,
+    lineNumber: number
+  ) => void;
+}
+
+export function usePlayers(): UsePlayersReturn {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const {
+    searchQuery,
+    setSearchQuery,
+    filterTab,
+    setFilterTab,
+    getAvailablePlayers,
+  } = usePlayerFilters(players);
+
+  const { handleAddPlayer, handleRemovePlayer } = usePlayerActions(
+    players,
+    setPlayers
+  );
+
+  const { handlePlayerDrop } = useLineupStorage();
+
+  const { selectedPlayer, setSelectedPlayer, handleViewPlayerDetails } =
+    usePlayerDetails();
 
   useEffect(() => {
-    localStorage.setItem("hockey-players", JSON.stringify(players));
-  }, [players]);
+    const fetchPlayers = async () => {
+      try {
+        setIsLoading(true);
+        const teamId = localStorage.getItem("selectedTeamId");
+        if (!teamId) return;
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterTab, setFilterTab] = useState("all");
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+        const fetchedPlayers = await playerService.getTeamPlayers(teamId);
+        const lineupKey = `hockey-lineup-${teamId}`;
+        const savedLineup = localStorage.getItem(lineupKey);
+        const lineupData = savedLineup
+          ? (JSON.parse(savedLineup) as LineupData)
+          : null;
 
-  function handleAddPlayer(player: Omit<Player, "id">) {
-    console.log("handleAddPlayer called with:", player);
-    const isNumberTaken = players.some((p) => p.number === player.number);
-    if (isNumberTaken) {
-      toast.error(`Jersey number ${player.number} is already taken`);
-      return false;
-    }
-
-    const newPlayer: Player = {
-      ...player,
-      id: `p${Date.now()}`,
+        if (lineupData) {
+          const playersWithLineupData = fetchedPlayers.map((player) => ({
+            ...player,
+            inLineup: Object.values(lineupData).some(
+              (line: LineConfiguration) =>
+                Object.values(line).some(
+                  (p: Player | null) => p?._id === player._id
+                )
+            ),
+          }));
+          setPlayers(playersWithLineupData);
+        } else {
+          setPlayers(fetchedPlayers);
+        }
+      } catch (error) {
+        toast.error("Failed to fetch players");
+        console.error("Error fetching players:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setPlayers((prev) => [...prev, newPlayer]);
-    toast.success(`${player.name} has been added to the roster`);
-    return true;
-  }
-
-  function handleRemovePlayer(playerId: string) {
-    setPlayers((prev) => prev.filter((p) => p.id !== playerId));
-    toast.success("Player has been removed from the roster");
-  }
-
-  function getAvailablePlayers(lineup: any) {
-    const usedPlayerIds = new Set<string>();
-
-    Object.values(lineup).forEach((line) => {
-      Object.values(line).forEach((player) => {
-        if (player) usedPlayerIds.add(player.id);
-      });
-    });
-
-    let filteredPlayers = players
-      .filter((player) => !usedPlayerIds.has(player.id))
-      .filter(
-        (player) =>
-          player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          player.positions?.some((pos) =>
-            pos.toLowerCase().includes(searchQuery.toLowerCase())
-          ) ||
-          player.nationality
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          player.number.toString().includes(searchQuery)
-      );
-
-    if (filterTab !== "all") {
-      if (filterTab === "forwards") {
-        filteredPlayers = filteredPlayers.filter((player) =>
-          player.positions?.some((pos) => ["LW", "C", "RW"].includes(pos))
-        );
-      } else if (filterTab === "defense") {
-        filteredPlayers = filteredPlayers.filter((player) =>
-          player.positions?.some((pos) => ["LD", "RD"].includes(pos))
-        );
-      } else if (filterTab === "goalies") {
-        filteredPlayers = filteredPlayers.filter((player) =>
-          player.positions?.includes("G")
-        );
-      }
-    }
-
-    return filteredPlayers;
-  }
-
-  function handleViewPlayerDetails(player: Player) {
-    console.log("Setting selected player:", player.name);
-    setSelectedPlayer(player);
-  }
+    fetchPlayers();
+  }, []);
 
   return {
     players,
+    isLoading,
     searchQuery,
     setSearchQuery,
     filterTab,
@@ -108,5 +109,10 @@ export function usePlayers() {
     handleRemovePlayer,
     getAvailablePlayers,
     handleViewPlayerDetails,
-  };
+    handlePlayerDrop: (
+      playerId: string,
+      position: string,
+      lineNumber: number
+    ) => handlePlayerDrop(playerId, position, lineNumber, players),
+  } as const;
 }

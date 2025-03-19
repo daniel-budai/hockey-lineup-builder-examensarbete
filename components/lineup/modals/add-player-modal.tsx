@@ -13,13 +13,19 @@ import { usePlayerForm } from "@/hooks/usePlayerForm";
 import { PersonalInfoSection } from "@/components/lineup/modals/sections/PersonalInfo-Section";
 import { PhysicalInfoSection } from "@/components/lineup/modals/sections/PhysicalInfomation-section";
 import { PlayerPositionSection } from "@/components/lineup/modals/sections/PlayerPositionSection";
-import type { Player } from "@/types/lineup";
+import type { Player } from "@/types/player";
+import type { PlayerFormData } from "@/schemas/player.schema";
+import type { Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 interface AddPlayerModalProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
   onAddPlayer: (player: Omit<Player, "id">) => boolean;
 }
+
+type HandleOpenChangeFunction = (open: boolean) => void;
+type HandleSubmitFunction = () => void;
 
 export function AddPlayerModal({
   open,
@@ -42,18 +48,36 @@ export function AddPlayerModal({
     resetForm,
   } = usePlayerForm();
 
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange: HandleOpenChangeFunction = (open) => {
     if (!open) {
       resetForm();
     }
     onOpenChange(open);
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
+  const handleSubmit: HandleSubmitFunction = () => {
+    console.log("Submit button clicked");
 
-    const player = createPlayerObject();
-    const success = onAddPlayer(player);
+    const teamId = localStorage.getItem("selectedTeamId");
+    console.log("TeamId from localStorage:", teamId);
+
+    if (!teamId) {
+      toast.error("No team selected");
+      return;
+    }
+
+    const playerWithTeam = {
+      ...formData,
+      teamId,
+    };
+
+    if (!validateForm(playerWithTeam)) {
+      console.log("Form validation failed");
+      return;
+    }
+
+    console.log("Final player data:", playerWithTeam);
+    const success = onAddPlayer(playerWithTeam);
 
     if (success) {
       handleOpenChange(false);
@@ -72,14 +96,19 @@ export function AddPlayerModal({
         <ScrollArea className="max-h-[70vh] pr-4">
           <div className="grid gap-6 py-4">
             <PersonalInfoSection
-              formData={formData}
+              formData={formData as PlayerFormData}
               errors={errors}
-              onUpdate={updateField}
+              onUpdate={
+                updateField as <K extends keyof PlayerFormData>(
+                  field: K,
+                  value: PlayerFormData[K]
+                ) => void
+              }
               onBirthdateChange={handleBirthdateChange}
             />
 
             <PhysicalInfoSection
-              formData={formData}
+              formData={formData as PlayerFormData}
               onHeightCmChange={handleHeightCmChange}
               onHeightImperialChange={handleHeightImperialChange}
               onWeightKgChange={handleWeightKgChange}
@@ -87,7 +116,7 @@ export function AddPlayerModal({
             />
 
             <PlayerPositionSection
-              formData={formData}
+              formData={formData as PlayerFormData}
               onPositionTypeChange={handlePositionTypeChange}
               onPositionChange={handlePositionChange}
               error={errors.positions}

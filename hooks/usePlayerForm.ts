@@ -1,11 +1,11 @@
 import { useState } from "react";
-import type { Player } from "@/types/lineup";
 import {
   convertHeight,
   convertWeight,
   calculateAge,
 } from "@/lib/utils/conversions";
-import { playerFormSchema, PlayerFormData } from "@/schemas/player.schema";
+import { playerFormSchema } from "@/schemas/player.schema";
+import type { Position } from "@/types/positions";
 
 export interface PlayerFormData {
   firstName: string;
@@ -24,6 +24,7 @@ export interface PlayerFormData {
   isForward: boolean;
   isDefense: boolean;
   isGoalie: boolean;
+  teamId?: string;
 }
 
 export function usePlayerForm() {
@@ -123,7 +124,7 @@ export function usePlayerForm() {
 
   const handlePositionChange = (position: string, checked: boolean) => {
     if (checked) {
-      updateField("positions", [...formData.positions, position]);
+      updateField("positions", [...formData.positions, position as Position]);
     } else {
       updateField(
         "positions",
@@ -132,8 +133,10 @@ export function usePlayerForm() {
     }
   };
 
-  const validateForm = () => {
-    const result = playerFormSchema.safeParse(formData);
+  const validateForm = (dataToValidate = formData) => {
+    console.log("Validating form data:", dataToValidate);
+
+    const result = playerFormSchema.safeParse(dataToValidate);
 
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -142,6 +145,7 @@ export function usePlayerForm() {
         newErrors[path] = issue.message;
       });
 
+      console.log("Validation errors:", newErrors);
       setErrors(newErrors);
       return false;
     }
@@ -172,31 +176,31 @@ export function usePlayerForm() {
     setErrors({});
   };
 
-  const createPlayerObject = (): Omit<Player, "id"> => {
-    return {
-      name: `${formData.firstName} ${formData.lastName}`,
-      number: Number.parseInt(formData.number),
-      age: formData.age ? Number.parseInt(formData.age) : undefined,
-      nationality: formData.nationality,
+  const createPlayerObject = () => {
+    const teamId = localStorage.getItem("selectedTeamId");
+
+    const player = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      number: formData.number,
       positions: formData.positions,
-      stats: {},
-      height: {
-        cm: formData.heightCm ? Number.parseInt(formData.heightCm) : undefined,
-        imperial: formData.heightFt
-          ? `${formData.heightFt}'${formData.heightIn}"`
-          : undefined,
-      },
-      weight: {
-        kg: formData.weightKg ? Number.parseInt(formData.weightKg) : undefined,
-        lbs: formData.weightLbs
-          ? Number.parseInt(formData.weightLbs)
-          : undefined,
-      },
-      birthplace: formData.birthplace || undefined,
-      birthdate: formData.birthdate
-        ? new Date(formData.birthdate).toISOString()
-        : undefined,
+      teamId,
+      isForward: formData.isForward,
+      isDefense: formData.isDefense,
+      isGoalie: formData.isGoalie,
+      nationality: formData.nationality,
+      birthdate: formData.birthdate,
+      heightCm: formData.heightCm,
+      heightFt: formData.heightFt,
+      heightIn: formData.heightIn,
+      weightKg: formData.weightKg,
+      weightLbs: formData.weightLbs,
+      birthplace: formData.birthplace,
+      age: formData.age,
     };
+
+    console.log("Creating player with data:", player);
+    return player;
   };
 
   return {
