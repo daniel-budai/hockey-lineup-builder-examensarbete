@@ -16,6 +16,7 @@ import { PlayerPositionSection } from "@/components/lineup/modals/sections/Playe
 import type { Player } from "@/types/player";
 import type { PlayerFormData } from "@/schemas/player.schema";
 import type { Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 interface AddPlayerModalProps {
   open: boolean;
@@ -55,10 +56,28 @@ export function AddPlayerModal({
   };
 
   const handleSubmit: HandleSubmitFunction = () => {
-    if (!validateForm()) return;
+    console.log("Submit button clicked");
 
-    const player = createPlayerObject();
-    const success = onAddPlayer(player);
+    const teamId = localStorage.getItem("selectedTeamId");
+    console.log("TeamId from localStorage:", teamId);
+
+    if (!teamId) {
+      toast.error("No team selected");
+      return;
+    }
+
+    const playerWithTeam = {
+      ...formData,
+      teamId,
+    };
+
+    if (!validateForm(playerWithTeam)) {
+      console.log("Form validation failed");
+      return;
+    }
+
+    console.log("Final player data:", playerWithTeam);
+    const success = onAddPlayer(playerWithTeam);
 
     if (success) {
       handleOpenChange(false);

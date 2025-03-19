@@ -20,6 +20,7 @@ export interface PlayerFormData {
   heightIn: string;
   weightKg: string;
   weightLbs: string;
+  teamId: string;
 }
 
 export interface FormErrors {

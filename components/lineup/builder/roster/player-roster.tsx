@@ -49,7 +49,7 @@ export function PlayerRoster({
       <div className="grid grid-cols-1 gap-3 pr-4">
         {players.map((player) => (
           <DraggablePlayerCard
-            key={player.id}
+            key={player._id}
             player={player}
             onViewDetails={onViewDetails}
             onRemovePlayer={onRemovePlayer}
@@ -71,7 +71,7 @@ function DraggablePlayerCard({
   onRemovePlayer,
 }: DraggablePlayerCardProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: player.id,
+    id: player._id,
   });
 
   return (

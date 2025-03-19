@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { Player } from "@/types/player";
 import {
   convertHeight,
   convertWeight,
@@ -25,6 +24,7 @@ export interface PlayerFormData {
   isForward: boolean;
   isDefense: boolean;
   isGoalie: boolean;
+  teamId?: string;
 }
 
 export function usePlayerForm() {
@@ -133,8 +133,10 @@ export function usePlayerForm() {
     }
   };
 
-  const validateForm = () => {
-    const result = playerFormSchema.safeParse(formData);
+  const validateForm = (dataToValidate = formData) => {
+    console.log("Validating form data:", dataToValidate);
+
+    const result = playerFormSchema.safeParse(dataToValidate);
 
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -143,6 +145,7 @@ export function usePlayerForm() {
         newErrors[path] = issue.message;
       });
 
+      console.log("Validation errors:", newErrors);
       setErrors(newErrors);
       return false;
     }
@@ -173,31 +176,31 @@ export function usePlayerForm() {
     setErrors({});
   };
 
-  const createPlayerObject = (): Omit<Player, "id"> => {
-    return {
-      name: `${formData.firstName} ${formData.lastName}`,
-      number: Number.parseInt(formData.number),
-      age: formData.age ? Number.parseInt(formData.age) : 0,
+  const createPlayerObject = () => {
+    const teamId = localStorage.getItem("selectedTeamId");
+
+    const player = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      number: formData.number,
+      positions: formData.positions,
+      teamId,
+      isForward: formData.isForward,
+      isDefense: formData.isDefense,
+      isGoalie: formData.isGoalie,
       nationality: formData.nationality,
-      positions: formData.positions as Position[],
-      stats: {},
-      height: {
-        cm: formData.heightCm ? Number.parseInt(formData.heightCm) : undefined,
-        imperial: formData.heightFt
-          ? `${formData.heightFt}'${formData.heightIn}"`
-          : undefined,
-      },
-      weight: {
-        kg: formData.weightKg ? Number.parseInt(formData.weightKg) : undefined,
-        lbs: formData.weightLbs
-          ? Number.parseInt(formData.weightLbs)
-          : undefined,
-      },
-      birthplace: formData.birthplace || undefined,
-      birthdate: formData.birthdate
-        ? new Date(formData.birthdate).toISOString()
-        : undefined,
+      birthdate: formData.birthdate,
+      heightCm: formData.heightCm,
+      heightFt: formData.heightFt,
+      heightIn: formData.heightIn,
+      weightKg: formData.weightKg,
+      weightLbs: formData.weightLbs,
+      birthplace: formData.birthplace,
+      age: formData.age,
     };
+
+    console.log("Creating player with data:", player);
+    return player;
   };
 
   return {

@@ -5,6 +5,7 @@ import type { Player } from "@/types/player";
 import type { Position } from "@/types/positions";
 import { Button } from "@/components/ui/button";
 import { Info, Trash2 } from "lucide-react";
+import { calculateAge } from "@/lib/utils/conversions";
 
 interface PlayerCardProps {
   player: Player;
@@ -44,12 +45,15 @@ export function PlayerCard({
         )}
       >
         <div className="font-bold text-xl">{player.number}</div>
-        <div className="text-xs font-medium">{player.name.split(" ")[0]}</div>
+        <div className="text-xs font-medium">
+          {player.firstName} {player.lastName}
+        </div>
       </div>
     );
   }
 
   const isGoalie = player.positions.includes("G" as Position);
+  const age = calculateAge(player.birthdate);
 
   return (
     <div
@@ -67,7 +71,7 @@ export function PlayerCard({
           <div className="flex justify-between items-start">
             <div>
               <div className="font-semibold text-white text-sm">
-                {player.name}
+                {player.firstName} {player.lastName}
               </div>
               <div className="flex items-center mt-1 space-x-2">
                 <div className="flex flex-wrap gap-1">
@@ -81,10 +85,10 @@ export function PlayerCard({
                   ))}
                 </div>
                 <span className="text-xs text-slate-400">
-                  {player.nationality}
+                  {player.nationality || ""}
                 </span>
                 <span className="text-xs text-slate-400">
-                  Age: {player.age}
+                  {player.birthdate ? `Age: ${age}` : ""}
                 </span>
               </div>
             </div>
@@ -114,7 +118,7 @@ export function PlayerCard({
                     className="h-7 w-7 rounded-full hover:bg-red-500/20 text-red-400 hover:text-red-300"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onRemovePlayer(player.id);
+                      onRemovePlayer(player._id);
                     }}
                   >
                     <Trash2 className="h-4 w-4" />

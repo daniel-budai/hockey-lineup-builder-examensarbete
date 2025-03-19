@@ -79,7 +79,9 @@ export function LineupList({ teamId }: LineupListProps) {
                             className="bg-[#0f172a]/50 p-2 rounded"
                           >
                             <p className="text-xs text-slate-400">{position}</p>
-                            <p className="text-white">{player.name}</p>
+                            <p className="text-white">
+                              {player.firstName} {player.lastName}
+                            </p>
                             <p className="text-slate-400">#{player.number}</p>
                           </div>
                         )
