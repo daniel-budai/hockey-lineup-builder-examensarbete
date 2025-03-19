@@ -1,4 +1,4 @@
-import { TeamFormField } from "../../form-fields/TeamFormField";
+import { TeamFormField } from "@/components/lineup/modals/form-fields/TeamFormField";
 
 interface TeamPreviewProps {
   formData: {

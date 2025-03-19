@@ -1,25 +1,11 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { lineupService } from "@/services/api/lineupService";
 import type { LineupData } from "@/types/lineup";
 import type { Player } from "@/types/player";
 import type { Position } from "@/types/positions";
 
 type LineTab = "line1" | "line2" | "line3" | "line4";
-
-interface SaveLineupData {
-  teamId: string;
-  name: string;
-  line1: LineupData["line1"];
-  line2: LineupData["line2"];
-  line3: LineupData["line3"];
-  line4: LineupData["line4"];
-}
-
-interface LineupResponse {
-  success: boolean;
-  error?: string;
-}
-
 interface UseLineupReturn {
   readonly lineup: LineupData;
   readonly setLineup: (lineup: LineupData) => void;
@@ -88,37 +74,18 @@ export function useLineup(): UseLineupReturn {
         ? JSON.parse(currentLineup)
         : emptyLineup;
 
-      const lineupToSave: SaveLineupData = {
+      await lineupService.saveLineup({
         teamId,
         name: `${teamName} Lineup - ${new Date().toLocaleDateString()}`,
-        line1: parsedLineup.line1,
-        line2: parsedLineup.line2,
-        line3: parsedLineup.line3,
-        line4: parsedLineup.line4,
-      };
-
-      const response = await fetch("/api/lineup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(lineupToSave),
+        lineup: parsedLineup,
       });
-
-      const data: LineupResponse = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save lineup");
-      }
 
       toast.success(`${teamName} lineup has been saved successfully.`);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to save lineup. Please try again.";
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save lineup"
+      );
       console.error("Error saving lineup:", error);
-      toast.error(errorMessage);
     }
   };
 

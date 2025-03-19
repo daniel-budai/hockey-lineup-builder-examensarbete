@@ -1,162 +1,89 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Position } from "@/types/positions"; // Import the Position type we defined earlier
+import type { LineupData } from "@/types/lineup";
 
 interface LineupListProps {
   teamId: string;
 }
 
-interface Player {
-  name: string;
-  number?: number;
-}
-
-interface LinePositions {
-  LW?: Player;
-  C?: Player;
-  RW?: Player;
-  LD?: Player;
-  RD?: Player;
-  G?: Player;
-}
-
-interface Lineup {
+interface SavedLineup {
   id: string;
   name: string;
-  line1: LinePositions;
-  line2: LinePositions;
-  line3: LinePositions;
-  line4: LinePositions;
+  lineup: LineupData;
+  createdAt?: string;
 }
 
-const standardPositions: Record<string, Position[]> = {
-  line1: ["LW", "C", "RW", "LD", "RD", "G"],
-  line2: ["LW", "C", "RW", "LD", "RD"],
-  line3: ["LW", "C", "RW", "LD", "RD"],
-  line4: ["LW", "C", "RW", "LD", "RD"],
-} as const;
-
 export function LineupList({ teamId }: LineupListProps) {
-  const [lineups, setLineups] = useState<Lineup[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [lineups, setLineups] = useState<SavedLineup[]>([]);
 
   useEffect(() => {
-    async function fetchLineups() {
+    // Load lineups from localStorage
+    const localLineup = localStorage.getItem(`hockey-lineup-${teamId}`);
+    if (localLineup) {
       try {
-        setIsLoading(true);
-        const response = await fetch(`/api/lineup?teamId=${teamId}`);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to fetch lineups");
-        }
-
-        const data = await response.json();
-        setLineups(data as Lineup[]);
-        setError(null);
+        const parsedLineup = JSON.parse(localLineup);
+        // Create a SavedLineup object from localStorage data
+        const savedLineup: SavedLineup = {
+          id: `local-${teamId}`,
+          name: `Current Lineup`,
+          lineup: parsedLineup,
+          createdAt: new Date().toISOString(),
+        };
+        setLineups([savedLineup]);
       } catch (error) {
-        console.error("Error details:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to fetch lineups"
-        );
-      } finally {
-        setIsLoading(false);
+        console.error("Failed to parse lineup from localStorage:", error);
       }
-    }
-
-    if (teamId) {
-      fetchLineups();
     }
   }, [teamId]);
 
-  if (isLoading)
-    return <div className="text-slate-300 py-4">Loading lineups...</div>;
-  if (error) return <div className="text-red-400 py-4">Error: {error}</div>;
-  if (!lineups.length)
+  if (!lineups.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-slate-300">
-        <div className="text-4xl mb-3">🏒</div>
-        <p>No lineups saved for this team yet.</p>
+      <div className="text-slate-400 text-center py-8">
+        No lineups saved yet. Create a lineup to get started.
       </div>
     );
+  }
 
   return (
-    <div className="space-y-6">
-      {lineups.map((lineup, index) => (
+    <div className="space-y-4">
+      {lineups.map((lineup) => (
         <div
-          key={lineup.id || `lineup-${index}`}
-          className="bg-[#0f172a] rounded-lg p-5 shadow-md border border-[#334155]/50 hover:border-blue-400/50 transition-all"
+          key={lineup.id}
+          className="bg-[#1e293b]/50 rounded-lg p-4 border border-[#334155]/30"
         >
-          <div className="flex justify-between items-center mb-4 pb-2 border-b border-[#334155]/30">
-            <h3 className="font-semibold text-lg text-white flex items-center">
-              <span className="mr-2">🏒</span>
-              {lineup.name}
-            </h3>
-          </div>
+          <h3 className="font-medium text-white mb-2">{lineup.name}</h3>
 
-          <div className="space-y-4">
-            {(
-              Object.keys(standardPositions) as Array<
-                keyof typeof standardPositions
-              >
-            ).map((line) => {
-              const linePositions =
-                lineup[line as keyof Lineup] || ({} as LinePositions);
-              const hasPlayers = Object.values(linePositions).some(
-                (player): player is Player => player !== undefined
+          {/* Display lineup details */}
+          <div className="space-y-2">
+            {Object.entries(lineup.lineup).map(([lineName, positions]) => {
+              const hasPlayers = Object.values(positions).some(
+                (player) => player !== null
               );
-
               if (!hasPlayers) return null;
 
               return (
                 <div
-                  key={`${line}-${lineup.id}`}
-                  className="rounded-md bg-[#1e293b]/50 p-3"
+                  key={lineName}
+                  className="border-t border-[#334155]/30 pt-2"
                 >
-                  <p className="font-medium capitalize text-blue-400 mb-2 text-sm">
-                    {line.replace("line", "Line ")}
+                  <p className="text-sm text-blue-400 mb-1">
+                    {lineName.replace("line", "Line ")}
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                    {standardPositions[line].map((position) => {
-                      const linePositions = lineup[
-                        line as keyof Lineup
-                      ] as LinePositions;
-                      const player =
-                        linePositions[position as keyof LinePositions];
-
-                      return (
-                        <div
-                          key={`${position}-${lineup.id}-${line}`}
-                          className={`p-2 rounded border ${
-                            player
-                              ? "bg-[#0f172a]/70 border-[#334155]/30"
-                              : "bg-[#0f172a]/30 border-[#334155]/10"
-                          }`}
-                        >
-                          <p className="text-xs text-slate-400 uppercase">
-                            {position}
-                          </p>
-                          {player ? (
-                            <>
-                              <p className="text-white font-medium">
-                                {player.name}
-                              </p>
-                              {player.number && (
-                                <p className="text-slate-300 text-sm">
-                                  #{player.number}
-                                </p>
-                              )}
-                            </>
-                          ) : (
-                            <p className="text-slate-500 italic text-sm">
-                              Empty
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div className="grid grid-cols-6 gap-2 text-sm">
+                    {Object.entries(positions).map(
+                      ([position, player]) =>
+                        player && (
+                          <div
+                            key={`${lineName}-${position}`}
+                            className="bg-[#0f172a]/50 p-2 rounded"
+                          >
+                            <p className="text-xs text-slate-400">{position}</p>
+                            <p className="text-white">{player.name}</p>
+                            <p className="text-slate-400">#{player.number}</p>
+                          </div>
+                        )
+                    )}
                   </div>
                 </div>
               );

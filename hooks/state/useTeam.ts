@@ -1,19 +1,8 @@
 // @/hooks/state/useTeam.ts
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { teamService } from "@/services/api/teamService";
 import type { Team } from "@/types/team";
-
-interface TeamResponse {
-  success: boolean;
-  teams?: Team[];
-  error?: string;
-}
-
-interface CreateTeamResponse {
-  success: boolean;
-  team?: Team;
-  error?: string;
-}
 
 type CreateTeamData = Omit<Team, "id" | "createdAt" | "updatedAt">;
 
@@ -22,43 +11,31 @@ export function useTeam() {
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    void fetchTeams();
-  }, []);
-
   const fetchTeams = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/teams");
-      const data: TeamResponse = await response.json();
+      const fetchedTeams = await teamService.getTeams();
+      setTeams(fetchedTeams);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch teams");
+      const savedTeamId = localStorage.getItem("selectedTeamId");
+      if (savedTeamId) {
+        const savedTeam = fetchedTeams.find((team) => team._id === savedTeamId);
+        if (savedTeam) {
+          setCurrentTeam(savedTeam);
+          localStorage.setItem("selectedTeamId", savedTeam._id);
+          return;
+        }
       }
 
-      if (data.success && data.teams) {
-        setTeams(data.teams);
-        const savedTeamId = localStorage.getItem("selectedTeamId");
-
-        if (savedTeamId) {
-          const savedTeam = data.teams.find((team) => team._id === savedTeamId);
-          if (savedTeam) {
-            setCurrentTeam(savedTeam);
-            return;
-          }
-        }
-
-        // Set first team as default if no saved team exists
-        if (data.teams.length > 0 && !currentTeam) {
-          setCurrentTeam(data.teams[0]);
-        }
+      if (fetchedTeams.length > 0) {
+        const defaultTeam = fetchedTeams[0];
+        setCurrentTeam(defaultTeam);
+        localStorage.setItem("selectedTeamId", defaultTeam._id);
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "An error occurred while fetching teams";
-      toast.error(errorMessage);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to fetch teams"
+      );
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -66,45 +43,32 @@ export function useTeam() {
   };
 
   const handleSelectTeam = (team: Team): void => {
+    console.log("Selecting team:", team);
     setCurrentTeam(team);
     localStorage.setItem("selectedTeamId", team._id);
+    console.log("Stored teamId:", localStorage.getItem("selectedTeamId"));
   };
 
   const handleCreateTeam = async (
     teamData: CreateTeamData
   ): Promise<boolean> => {
     try {
-      const response = await fetch("/api/teams", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(teamData),
-      });
-
-      const data: CreateTeamResponse = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create team");
-      }
-
-      if (data.success) {
-        toast.success("Team created successfully!");
-        void fetchTeams();
-        return true;
-      }
-
-      return false;
+      await teamService.createTeam(teamData);
+      toast.success("Team created successfully!");
+      void fetchTeams();
+      return true;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "An error occurred while creating the team";
-      toast.error(errorMessage);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create team"
+      );
       console.error(error);
       return false;
     }
   };
+
+  useEffect(() => {
+    void fetchTeams();
+  }, []);
 
   return {
     teams,
@@ -113,5 +77,5 @@ export function useTeam() {
     handleSelectTeam,
     handleCreateTeam,
     fetchTeams,
-  } as const; // Make the return type readonly
+  } as const;
 }
