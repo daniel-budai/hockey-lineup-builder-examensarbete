@@ -24,28 +24,26 @@ export function RosterContainer({
   const { searchQuery, setSearchQuery, filterTab, setFilterTab } = usePlayers();
   const { lineup } = useLineup();
 
+  console.log("Players in roster:", allPlayers); // Debug log
+
   const filteredPlayers = allPlayers.filter((player) => {
+    const searchLower = searchQuery.toLowerCase();
+    const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();
+
     const matchesSearch =
-      player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      fullName.includes(searchLower) ||
       player.positions.some((pos: Position) =>
-        pos.toLowerCase().includes(searchQuery.toLowerCase())
+        pos.toLowerCase().includes(searchLower)
       ) ||
-      player.nationality.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (player.nationality?.toLowerCase() || "").includes(searchLower) ||
       player.number.toString().includes(searchQuery);
 
     if (!matchesSearch) return false;
 
     if (filterTab === "all") return true;
-    if (filterTab === "forwards")
-      return player.positions.some((pos: Position) =>
-        ["LW", "C", "RW"].includes(pos)
-      );
-    if (filterTab === "defense")
-      return player.positions.some((pos: Position) =>
-        ["LD", "RD"].includes(pos)
-      );
-    if (filterTab === "goalies")
-      return player.positions.includes("G" as Position);
+    if (filterTab === "forwards") return player.isForward;
+    if (filterTab === "defense") return player.isDefense;
+    if (filterTab === "goalies") return player.isGoalie;
 
     return true;
   });

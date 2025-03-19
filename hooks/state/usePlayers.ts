@@ -1,6 +1,7 @@
 // @/hooks/state/usePlayers.ts
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { playerService } from "@/services/api/playerService";
 import type { Player } from "@/types/player";
 import type { LineupData } from "@/types/lineup";
 import type { Dispatch, SetStateAction } from "react";
@@ -14,13 +15,14 @@ const GOALIE_POSITION: Position = "G";
 
 interface UsePlayersReturn {
   readonly players: Player[];
+  readonly isLoading: boolean;
   readonly searchQuery: string;
   readonly setSearchQuery: (query: string) => void;
   readonly filterTab: FilterTabType;
   readonly setFilterTab: (tab: FilterTabType) => void;
   readonly selectedPlayer: Player | null;
   readonly setSelectedPlayer: (player: Player | null) => void;
-  readonly handleAddPlayer: (player: Omit<Player, "id">) => boolean;
+  readonly handleAddPlayer: (player: Omit<Player, "id">) => Promise<boolean>;
   readonly handleRemovePlayer: (playerId: string) => void;
   readonly getAvailablePlayers: (lineup: LineupData) => Player[];
   readonly handleViewPlayerDetails: (
@@ -30,42 +32,41 @@ interface UsePlayersReturn {
 }
 
 export function usePlayers(): UsePlayersReturn {
-  const [players, setPlayers] = useState<Player[]>(() => {
-    if (typeof window !== "undefined") {
-      const teamId = localStorage.getItem("selectedTeamId");
-      console.log("Initializing with teamId:", teamId);
-
-      if (teamId) {
-        const savedPlayers = localStorage.getItem(`hockey-players-${teamId}`);
-        console.log("Found saved players:", savedPlayers);
-
-        if (savedPlayers) {
-          try {
-            const parsed = JSON.parse(savedPlayers);
-            console.log("Parsed players:", parsed);
-            return parsed;
-          } catch (error) {
-            console.error("Failed to parse saved players:", error);
-          }
-        }
-      }
-    }
-    return [];
-  });
-
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterTab, setFilterTab] = useState<FilterTabType>("all");
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
   useEffect(() => {
-    const teamId = localStorage.getItem("selectedTeamId");
-    if (teamId) {
-      localStorage.setItem(`hockey-players-${teamId}`, JSON.stringify(players));
-      console.log("Saved players to localStorage:", players);
-    }
-  }, [players]);
+    const fetchPlayers = async () => {
+      try {
+        setIsLoading(true);
+        const teamId = localStorage.getItem("selectedTeamId");
+        console.log("Current teamId from localStorage:", teamId);
 
-  const handleAddPlayer = (player: Omit<Player, "id">): boolean => {
+        if (!teamId) {
+          console.log("No teamId found in localStorage");
+          return;
+        }
+
+        const fetchedPlayers = await playerService.getTeamPlayers(teamId);
+        console.log("Fetched players:", fetchedPlayers);
+        setPlayers(fetchedPlayers);
+      } catch (error) {
+        toast.error("Failed to fetch players");
+        console.error("Error fetching players:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPlayers();
+  }, []);
+
+  const handleAddPlayer = async (
+    player: Omit<Player, "id">
+  ): Promise<boolean> => {
     const teamId = localStorage.getItem("selectedTeamId");
     if (!teamId) {
       toast.error("No team selected");
@@ -78,27 +79,38 @@ export function usePlayers(): UsePlayersReturn {
       return false;
     }
 
-    const newPlayer: Player = {
-      ...player,
-      id: `p${Date.now()}`,
-    };
+    try {
+      const newPlayer = await playerService.createPlayer({
+        ...player,
+        teamId,
+        number: player.number,
+        name: `${player.firstName} ${player.lastName}`,
+        position: player.positions[0],
+      });
 
-    setPlayers((prevPlayers) => {
-      const newPlayers = [...prevPlayers, newPlayer];
-      return newPlayers;
-    });
+      console.log("New player added:", newPlayer);
 
-    toast.success(`${player.name} has been added to the roster`);
-    return true;
+      setPlayers((prevPlayers) => [...prevPlayers, newPlayer]);
+      toast.success(
+        `${player.firstName} ${player.lastName} has been added to the roster`
+      );
+      return true;
+    } catch (error) {
+      toast.error("Failed to add player");
+      console.error("Error adding player:", error);
+      return false;
+    }
   };
 
-  useEffect(() => {
-    console.log("Players state updated:", players);
-  }, [players]);
-
-  const handleRemovePlayer = (playerId: string): void => {
-    setPlayers((prev) => prev.filter((p) => p.id !== playerId));
-    toast.success("Player has been removed from the roster");
+  const handleRemovePlayer = async (playerId: string): Promise<void> => {
+    try {
+      await playerService.deletePlayer(playerId);
+      setPlayers((prev) => prev.filter((p) => p._id !== playerId));
+      toast.success("Player has been removed from the roster");
+    } catch (error) {
+      toast.error("Failed to remove player");
+      console.error("Error removing player:", error);
+    }
   };
 
   const getAvailablePlayers = (lineup: LineupData): Player[] => {
@@ -106,20 +118,25 @@ export function usePlayers(): UsePlayersReturn {
 
     Object.values(lineup).forEach((line) => {
       Object.values(line).forEach((player) => {
-        if (player) usedPlayerIds.add(player.id);
+        if (player) usedPlayerIds.add(player._id);
       });
     });
 
     const filteredPlayers = players
-      .filter((player) => !usedPlayerIds.has(player.id))
+      .filter((player) => !usedPlayerIds.has(player._id))
       .filter((player) => {
+        if (!searchQuery) return true;
+
         const searchLower = searchQuery.toLowerCase();
+        const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();
+
         return (
-          player.name.toLowerCase().includes(searchLower) ||
+          fullName.includes(searchLower) ||
           player.positions.some((pos) =>
             pos.toLowerCase().includes(searchLower)
           ) ||
-          player.nationality.toLowerCase().includes(searchLower) ||
+          (player.nationality &&
+            player.nationality.toLowerCase().includes(searchLower)) ||
           player.number.toString().includes(searchQuery)
         );
       });
@@ -150,7 +167,11 @@ export function usePlayers(): UsePlayersReturn {
     player: Player,
     setModalOpen: Dispatch<SetStateAction<boolean>>
   ): void => {
-    console.log("handleViewPlayerDetails called with player:", player.name);
+    console.log(
+      "handleViewPlayerDetails called with player:",
+      player.firstName,
+      player.lastName
+    );
     setSelectedPlayer(player);
     console.log("Setting playerDetailOpen to true");
     setModalOpen(true);
@@ -159,6 +180,7 @@ export function usePlayers(): UsePlayersReturn {
 
   return {
     players,
+    isLoading,
     searchQuery,
     setSearchQuery,
     filterTab,

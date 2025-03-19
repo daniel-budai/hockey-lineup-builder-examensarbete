@@ -21,15 +21,29 @@ export interface PlayerWeight {
 }
 
 export interface Player {
-  id: string;
-  name: string;
-  number: number;
-  age: number;
-  nationality: string;
+  _id: string;
+  firstName: string;
+  lastName: string;
+  number: string; // Changed to string to match schema
   positions: Position[];
-  stats?: PlayerStats;
-  height?: PlayerHeight;
-  weight?: PlayerWeight;
+  teamId: string;
+  nationality?: string;
   birthplace?: string;
   birthdate?: string;
+  age?: string; // Changed to string to match schema
+  heightCm?: string;
+  heightFt?: string;
+  heightIn?: string;
+  weightKg?: string;
+  weightLbs?: string;
+  isForward: boolean;
+  isDefense: boolean;
+  isGoalie: boolean;
+  stats?: {
+    goals: number;
+    assists: number;
+    gamesPlayed: number;
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
 }

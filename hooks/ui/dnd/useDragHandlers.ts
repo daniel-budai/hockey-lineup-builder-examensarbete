@@ -45,7 +45,7 @@ export function useDragHandlers({
 
     const player = line
       ? lineup[line as keyof LineupData][position as Position]
-      : players.find((p) => p.id === playerId);
+      : players.find((p) => p._id === playerId);
 
     if (player) {
       activeStates.setActivePlayer(player);
