@@ -70,8 +70,15 @@ function DraggablePlayerCard({
   onViewDetails,
   onRemovePlayer,
 }: DraggablePlayerCardProps) {
+  console.log("DraggablePlayerCard rendering for player:", player);
+  console.log("Player ID for draggable:", player._id);
+
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: player._id,
+    data: {
+      type: "roster-player",
+      player: player,
+    },
   });
 
   return (

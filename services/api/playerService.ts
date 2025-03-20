@@ -2,20 +2,32 @@
 import type { Player } from "@/types/player";
 
 interface CreatePlayerDTO {
-  name: string;
+  firstName: string;
+  lastName: string;
   number: string;
-  position: string;
+  positions: string[];
   teamId: string;
+  nationality?: string;
+  birthplace?: string;
+  birthdate?: string;
+  heightCm?: string;
+  heightFt?: string;
+  heightIn?: string;
+  weightKg?: string;
+  weightLbs?: string;
+  isForward: boolean;
+  isDefense: boolean;
+  isGoalie: boolean;
 }
 
 export const playerService = {
   async getTeamPlayers(teamId: string): Promise<Player[]> {
-    console.log("Fetching players for team:", teamId); // Debug log
+    console.log("Fetching players for team:", teamId);
 
     const response = await fetch(`/api/player?teamId=${teamId}`);
     const data = await response.json();
 
-    console.log("API response:", data); // Debug log
+    console.log("API response:", data);
 
     if (!response.ok) {
       throw new Error("Failed to fetch players");
