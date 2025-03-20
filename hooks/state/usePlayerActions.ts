@@ -30,11 +30,36 @@ export function usePlayerActions(
         ...player,
         teamId,
         number: player.number,
-        name: `${player.firstName} ${player.lastName}`,
-        position: player.positions[0],
+        positions: [player.positions[0]],
       });
 
-      setPlayers((prevPlayers: Player[]) => [...prevPlayers, newPlayer]);
+      setPlayers((prevPlayers: Player[]) => [
+        ...prevPlayers,
+        {
+          stats: newPlayer.stats || { goals: 0, assists: 0, gamesPlayed: 0 },
+          _id: newPlayer._id,
+          firstName: newPlayer.firstName,
+          lastName: newPlayer.lastName,
+          number: newPlayer.number,
+          positions: newPlayer.positions,
+          teamId: newPlayer.teamId,
+          nationality: newPlayer.nationality || "",
+          birthplace: newPlayer.birthplace || "",
+          birthdate: newPlayer.birthdate || "",
+          heightCm: newPlayer.heightCm || "",
+          heightFt: newPlayer.heightFt || "",
+          heightIn: newPlayer.heightIn || "",
+          weightKg: newPlayer.weightKg || "",
+          weightLbs: newPlayer.weightLbs || "",
+          isForward: newPlayer.isForward,
+          isDefense: newPlayer.isDefense,
+          isGoalie: newPlayer.isGoalie,
+          createdAt: newPlayer.createdAt,
+          updatedAt: newPlayer.updatedAt,
+          inLineup: false,
+        },
+      ]);
+
       toast.success(
         `${player.firstName} ${player.lastName} has been added to the roster`
       );
