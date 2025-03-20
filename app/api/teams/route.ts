@@ -15,16 +15,19 @@ export async function POST(request: Request) {
     await connectToDatabase();
 
     const body = await request.json();
+    console.log("Received team data:", body);
 
     // Validate with Zod
     const result = teamSchema.safeParse(body);
 
     if (!result.success) {
+      console.log("Validation errors:", result.error.issues);
       return NextResponse.json(
         {
           success: false,
           error: "Validation failed",
           issues: result.error.issues,
+          receivedData: body,
         },
         { status: 400 }
       );
@@ -42,7 +45,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Team creation failed:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to create team" },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to create team",
+        details: error,
+      },
       { status: 500 }
     );
   }

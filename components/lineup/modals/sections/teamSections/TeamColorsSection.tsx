@@ -1,9 +1,10 @@
 import { TeamFormField } from "../../form-fields/TeamFormField";
 import { Input } from "@/components/ui/input";
+import { TeamFormData } from "@/types/team";
 
 interface TeamColorsSectionProps {
-  formData: any;
-  onChange: (data: any) => void;
+  formData: Partial<TeamFormData>;
+  onChange: (data: Partial<TeamFormData>) => void;
 }
 
 export function TeamColorsSection({

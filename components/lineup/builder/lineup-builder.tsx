@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type Dispatch, type SetStateAction } from "react"; //useEffect,
+import { useState, type Dispatch, type SetStateAction, useEffect } from "react"; //useEffect,
 import { Toaster } from "sonner";
 import type { LineupData, LineNumber } from "@/types/lineup";
 import type { Position } from "@/types/positions";
@@ -18,13 +18,7 @@ import { usePlayers } from "@/hooks/state/usePlayers";
 import { useModals } from "@/hooks/ui/useModal";
 import { useDragAndDrop } from "@/hooks/ui/useDragAndDrop";
 import { useLineup } from "@/hooks/state/useLineup";
-
-const emptyLineup: LineupData = {
-  line1: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-  line2: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-  line3: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-  line4: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-};
+import { createEmptyLineup } from "@/hooks/state/useLineupStorage";
 
 export function LineupBuilder() {
   const {
@@ -48,8 +42,25 @@ export function LineupBuilder() {
   const [activeTab, setActiveTab] = useState<LineNumber>("line1");
   const [hoveredTab] = useState<LineNumber | null>(null);
 
+  const [teamChangeCount, setTeamChangeCount] = useState(0);
+
+  useEffect(() => {
+    const handleTeamChange = () => {
+      setTeamChangeCount((prev) => prev + 1);
+    };
+
+    window.addEventListener("team-changed", handleTeamChange);
+    return () => window.removeEventListener("team-changed", handleTeamChange);
+  }, []);
+
   const handleLineupChange = (newLineup: LineupData): void => {
     setLineup(newLineup);
+
+    const teamId = localStorage.getItem("selectedTeamId");
+    if (teamId) {
+      const lineupKey = `hockey-lineup-${teamId}`;
+      localStorage.setItem(lineupKey, JSON.stringify(newLineup));
+    }
   };
 
   const {
@@ -65,10 +76,11 @@ export function LineupBuilder() {
     setActiveTab: (value: LineNumber) => {
       setActiveTab(value);
     },
+    teamChangeCount,
   });
 
   const handleResetLineup = (): void => {
-    setLineup(emptyLineup);
+    setLineup(createEmptyLineup());
   };
 
   const removePlayerCompletely = (playerId: string): void => {

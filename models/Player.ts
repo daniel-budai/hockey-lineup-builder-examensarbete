@@ -20,18 +20,17 @@ const PlayerSchema = new mongoose.Schema({
     required: [true, "Please provide at least one position"],
   },
   teamId: {
-    // Changed from team to teamId to match form data
     type: mongoose.Schema.Types.ObjectId,
     ref: "Team",
     required: [true, "Team ID is required"],
   },
   nationality: String,
   birthplace: String,
-  birthdate: String, // Keep as string to match form
-  heightCm: String, // Keep as string to match form
+  birthdate: String,
+  heightCm: String,
   heightFt: String,
   heightIn: String,
-  weightKg: String, // Keep as string to match form
+  weightKg: String,
   weightLbs: String,
   isForward: Boolean,
   isDefense: Boolean,

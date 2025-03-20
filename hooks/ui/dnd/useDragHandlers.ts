@@ -7,7 +7,7 @@ import type { Player } from "@/types/player";
 import type { Position } from "@/types/positions";
 import type { LineTab, LineupData } from "@/types/lineup";
 import { toast } from "sonner";
-import { useLineupManipulation } from "./useLineupManipulation";
+// import { useLineupManipulation } from "./useLineupManipulation";
 import { useTabHandling } from "./useTabHandling";
 import { useActiveStates } from "./useActiveStates";
 
@@ -30,7 +30,7 @@ export function useDragHandlers({
   setCurrentHoveredTab,
   activeStates,
 }: UseDragHandlersProps) {
-  const { removePlayerFromLineup } = useLineupManipulation();
+  // const { removePlayerFromLineup } = useLineupManipulation();
   const { handleTabHover } = useTabHandling({
     setCurrentHoveredTab: setCurrentHoveredTab as (tab: string | null) => void,
     setActiveTab: setActiveTab as (tab: string) => void,
@@ -38,14 +38,29 @@ export function useDragHandlers({
   });
 
   function handleDragStart(event: DragStartEvent) {
-    const playerId = event.active.id.toString();
+    const { active } = event;
+    console.log("Drag start event:", active);
+
+    // If the drag started from a roster player, use the data directly
+    if (active.data?.current?.type === "roster-player") {
+      const player = active.data.current.player;
+      activeStates.setActivePlayer(player);
+      activeStates.setActivePosition(null);
+      return;
+    }
+
+    // Otherwise handle lineup players as before
+    const playerId = active.id.toString();
     const [line, position] = playerId.includes("line")
       ? playerId.split("-")
       : [null, null];
 
-    const player = line
-      ? lineup[line as keyof LineupData][position as Position]
-      : players.find((p) => p._id === playerId);
+    let player;
+    if (line) {
+      player = lineup[line as keyof LineupData][position as Position];
+    } else {
+      player = players.find((p) => p._id === playerId);
+    }
 
     if (player) {
       activeStates.setActivePlayer(player);

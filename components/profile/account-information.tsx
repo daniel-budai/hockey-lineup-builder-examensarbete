@@ -1,4 +1,3 @@
-// components/profile/account-information.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -12,6 +11,13 @@ import InfoItem from "@/components/profile/info-item";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { updateProfileSchema, UpdateProfileInput } from "@/schemas/auth.schema";
+
+interface SaveChangesData {
+  name: string;
+  email: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
 
 export default function AccountInformation() {
   const {
@@ -49,12 +55,18 @@ export default function AccountInformation() {
   }, [profile, isEditing, setValue]);
 
   const onSubmit = async (data: UpdateProfileInput) => {
-    await saveChanges({
+    // Only include password fields if they're provided
+    const updateData: SaveChangesData = {
       name: data.name,
       email: data.email,
-      currentPassword: data.currentPassword,
-      newPassword: data.newPassword,
-    });
+    };
+
+    if (data.currentPassword && data.newPassword) {
+      updateData.currentPassword = data.currentPassword;
+      updateData.newPassword = data.newPassword;
+    }
+
+    await saveChanges(updateData);
 
     // Reset password fields
     setValue("currentPassword", "");

@@ -4,6 +4,7 @@ import { lineupService } from "@/services/api/lineupService";
 import type { LineupData } from "@/types/lineup";
 import type { Player } from "@/types/player";
 import type { Position } from "@/types/positions";
+import { createEmptyLineup } from "./useLineupStorage";
 
 type LineTab = "line1" | "line2" | "line3" | "line4";
 interface UseLineupReturn {
@@ -19,41 +20,81 @@ interface UseLineupReturn {
   readonly isPositionValid: (player: Player, dropPosition: Position) => boolean;
 }
 
-const emptyLineup: LineupData = {
-  line1: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-  line2: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-  line3: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-  line4: { LW: null, C: null, RW: null, LD: null, RD: null, G: null },
-};
-
 export function useLineup(): UseLineupReturn {
   const [lineup, setLineup] = useState<LineupData>(() => {
-    if (typeof window !== "undefined") {
+    try {
       const teamId = localStorage.getItem("selectedTeamId");
-      if (!teamId) return emptyLineup;
+      if (!teamId) return createEmptyLineup();
 
-      const saved = localStorage.getItem(`hockey-lineup-${teamId}`);
-      if (!saved) return emptyLineup;
+      const lineupKey = `hockey-lineup-${teamId}`;
+      const savedLineup = localStorage.getItem(lineupKey);
 
-      try {
-        return JSON.parse(saved) as LineupData;
-      } catch (error) {
-        console.error("Failed to parse saved lineup:", error);
-        return emptyLineup;
+      if (savedLineup) {
+        const parsedLineup = JSON.parse(savedLineup) as LineupData;
+        return parsedLineup;
       }
+    } catch (error) {
+      console.error("Error loading lineup from localStorage:", error);
     }
-    return emptyLineup;
+    return createEmptyLineup();
   });
 
-  const [activeTab, setActiveTab] = useState<LineTab>("line1");
   const [hoveredTab, setHoveredTab] = useState<LineTab | null>(null);
+  const [currentTeamId, setCurrentTeamId] = useState<string | null>(
+    localStorage.getItem("selectedTeamId")
+  );
 
   useEffect(() => {
     const teamId = localStorage.getItem("selectedTeamId");
-    if (teamId) {
-      localStorage.setItem(`hockey-lineup-${teamId}`, JSON.stringify(lineup));
-    }
+    if (!teamId) return;
+
+    const lineupKey = `hockey-lineup-${teamId}`;
+    localStorage.setItem(lineupKey, JSON.stringify(lineup));
+    console.log("Saving lineup to localStorage:", lineup); // Debug log
   }, [lineup]);
+
+  useEffect(() => {
+    const handleTeamChange = () => {
+      const teamId = localStorage.getItem("selectedTeamId");
+      if (!teamId) {
+        setLineup(createEmptyLineup());
+        setCurrentTeamId(null);
+        return;
+      }
+
+      if (teamId !== currentTeamId) {
+        setCurrentTeamId(teamId);
+
+        const lineupKey = `hockey-lineup-${teamId}`;
+        const savedLineup = localStorage.getItem(lineupKey);
+
+        if (savedLineup) {
+          try {
+            const parsedLineup = JSON.parse(savedLineup) as LineupData;
+            console.log("Loading lineup from localStorage:", parsedLineup); // Debug log
+            setLineup(parsedLineup);
+          } catch (error) {
+            console.error("Error parsing saved lineup:", error);
+            setLineup(createEmptyLineup());
+          }
+        } else {
+          setLineup(createEmptyLineup());
+        }
+      }
+    };
+
+    handleTeamChange();
+
+    window.addEventListener("storage", handleTeamChange);
+    window.addEventListener("team-changed", handleTeamChange);
+
+    return () => {
+      window.removeEventListener("storage", handleTeamChange);
+      window.removeEventListener("team-changed", handleTeamChange);
+    };
+  }, [currentTeamId]);
+
+  const [activeTab, setActiveTab] = useState<LineTab>("line1");
 
   const handleTabClick = (line: LineTab): void => {
     setActiveTab(line);
@@ -72,7 +113,7 @@ export function useLineup(): UseLineupReturn {
       const currentLineup = localStorage.getItem(`hockey-lineup-${teamId}`);
       const parsedLineup: LineupData = currentLineup
         ? JSON.parse(currentLineup)
-        : emptyLineup;
+        : createEmptyLineup();
 
       await lineupService.saveLineup({
         teamId,
@@ -94,7 +135,7 @@ export function useLineup(): UseLineupReturn {
 
     const savedLineup = localStorage.getItem(`lineup-${teamId}`);
     if (!savedLineup) {
-      setLineup(emptyLineup);
+      setLineup(createEmptyLineup());
       return;
     }
 
@@ -103,7 +144,7 @@ export function useLineup(): UseLineupReturn {
       setLineup(lineupData.lineup);
     } catch (error) {
       console.error("Failed to parse saved lineup:", error);
-      setLineup(emptyLineup);
+      setLineup(createEmptyLineup());
     }
   };
 

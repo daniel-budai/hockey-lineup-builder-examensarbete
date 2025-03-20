@@ -12,7 +12,7 @@ interface LineupModalsProps {
   setPlayerDetailOpen: Dispatch<SetStateAction<boolean>>;
   setCreateTeamOpen: Dispatch<SetStateAction<boolean>>;
   selectedPlayer: Player | null;
-  handleAddPlayer: (player: Omit<Player, "id">) => boolean;
+  handleAddPlayer: (player: Omit<Player, "id">) => Promise<boolean>;
   handleRemovePlayer: (playerId: string) => void;
 }
 
