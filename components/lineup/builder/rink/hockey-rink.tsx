@@ -4,6 +4,7 @@ import { PlayerCard } from "@/components/lineup/builder/roster/player-card";
 import type { LineConfiguration, LineNumber } from "@/types/lineup";
 import type { Position } from "@/types/positions";
 import type { Player } from "@/types/player";
+import { useState, useEffect } from "react";
 
 interface HockeyRinkProps {
   line: LineConfiguration;
@@ -22,6 +23,17 @@ interface DraggablePlayerCardProps {
 }
 
 export function HockeyRink({ line, lineNumber }: HockeyRinkProps) {
+  const [, forceUpdate] = useState({});
+
+  useEffect(() => {
+    const handleTeamChange = () => {
+      forceUpdate({});
+    };
+
+    window.addEventListener("team-changed", handleTeamChange);
+    return () => window.removeEventListener("team-changed", handleTeamChange);
+  }, []);
+
   return (
     <div className="hockey-rink w-full max-w-[100%] sm:max-w-[700px] mx-auto aspect-[3/4] bg-[#e2e8f0] relative border-2 border-white overflow-hidden rounded-[40px] sm:rounded-[30px] xs:rounded-[20px]">
       {/* Goal creases */}

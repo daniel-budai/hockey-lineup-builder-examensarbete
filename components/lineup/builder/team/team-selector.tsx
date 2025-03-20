@@ -23,6 +23,17 @@ export function TeamSelector({
   onSelectTeam,
   onCreateTeamClick,
 }: TeamSelectorProps) {
+  const handleTeamSelect = (team: Team) => {
+    localStorage.setItem("selectedTeamId", team._id);
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(
+      new CustomEvent("team-changed", {
+        detail: { teamId: team._id },
+      })
+    );
+    onSelectTeam(team);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -60,7 +71,7 @@ export function TeamSelector({
           <DropdownMenuItem
             key={team._id}
             className="hover:bg-[#0f172a] focus:bg-[#0f172a] cursor-pointer"
-            onClick={() => onSelectTeam(team)}
+            onClick={() => handleTeamSelect(team)}
           >
             <div
               className="w-6 h-6 rounded-full mr-2 flex items-center justify-center text-xs font-bold"

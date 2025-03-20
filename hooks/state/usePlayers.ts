@@ -38,6 +38,9 @@ interface UsePlayersReturn {
 export function usePlayers(): UsePlayersReturn {
   const [players, setPlayers] = useState<Player[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTeamId, setCurrentTeamId] = useState<string | null>(
+    localStorage.getItem("selectedTeamId")
+  );
 
   const {
     searchQuery,
@@ -58,11 +61,26 @@ export function usePlayers(): UsePlayersReturn {
     usePlayerDetails();
 
   useEffect(() => {
+    const handleStorageChange = () => {
+      const newTeamId = localStorage.getItem("selectedTeamId");
+      if (newTeamId !== currentTeamId) {
+        setCurrentTeamId(newTeamId);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [currentTeamId]);
+
+  useEffect(() => {
     const fetchPlayers = async () => {
       try {
         setIsLoading(true);
         const teamId = localStorage.getItem("selectedTeamId");
-        if (!teamId) return;
+        if (!teamId) {
+          setPlayers([]);
+          return;
+        }
 
         const fetchedPlayers = await playerService.getTeamPlayers(teamId);
         const lineupKey = `hockey-lineup-${teamId}`;
@@ -88,13 +106,14 @@ export function usePlayers(): UsePlayersReturn {
       } catch (error) {
         toast.error("Failed to fetch players");
         console.error("Error fetching players:", error);
+        setPlayers([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchPlayers();
-  }, []);
+  }, [currentTeamId]);
 
   return {
     players,
