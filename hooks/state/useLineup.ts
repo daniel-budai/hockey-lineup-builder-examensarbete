@@ -64,24 +64,29 @@ export function useLineup(): UseLineupReturn {
         return;
       }
 
-      if (teamId !== currentTeamId) {
-        setCurrentTeamId(teamId);
+      const lineupKey = `hockey-lineup-${teamId}`;
+      const savedKey = `saved_${lineupKey}`;
 
-        const lineupKey = `hockey-lineup-${teamId}`;
-        const savedLineup = localStorage.getItem(lineupKey);
+      const currentLineup = localStorage.getItem(lineupKey);
+      const savedLineup = localStorage.getItem(savedKey);
 
-        if (savedLineup) {
-          try {
-            const parsedLineup = JSON.parse(savedLineup) as LineupData;
-            console.log("Loading lineup from localStorage:", parsedLineup); // Debug log
-            setLineup(parsedLineup);
-          } catch (error) {
-            console.error("Error parsing saved lineup:", error);
-            setLineup(createEmptyLineup());
+      const lineupData = currentLineup || savedLineup;
+
+      if (lineupData) {
+        try {
+          const parsedLineup = JSON.parse(lineupData) as LineupData;
+          setLineup(parsedLineup);
+
+          if (!currentLineup && savedLineup) {
+            localStorage.setItem(lineupKey, lineupData);
+            localStorage.removeItem(savedKey);
           }
-        } else {
+        } catch (error) {
+          console.error("Error parsing saved lineup:", error);
           setLineup(createEmptyLineup());
         }
+      } else {
+        setLineup(createEmptyLineup());
       }
     };
 
