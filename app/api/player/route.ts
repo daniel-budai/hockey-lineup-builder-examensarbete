@@ -7,20 +7,15 @@ import { playerFormSchema } from "@/schemas/player.schema";
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const teamId = searchParams.get("teamId");
 
-    console.log("Fetching players for teamId:", teamId); // Debug log
+    console.log("Fetching players for teamId:", teamId);
 
     await connectToDatabase();
     const players = await Player.find({ teamId });
 
-    console.log("Found players in database:", players); // Debug log
+    console.log("Found players in database:", players);
 
     return NextResponse.json({ success: true, players });
   } catch (error) {

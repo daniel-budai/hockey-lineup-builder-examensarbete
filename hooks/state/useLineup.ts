@@ -5,6 +5,7 @@ import type { LineupData } from "@/types/lineup";
 import type { Player } from "@/types/player";
 import type { Position } from "@/types/positions";
 import { createEmptyLineup } from "./useLineupStorage";
+import { useRouter } from "next/navigation";
 
 type LineTab = "line1" | "line2" | "line3" | "line4";
 interface UseLineupReturn {
@@ -21,6 +22,7 @@ interface UseLineupReturn {
 }
 
 export function useLineup(): UseLineupReturn {
+  const router = useRouter();
   const [lineup, setLineup] = useState<LineupData>(() => {
     try {
       const teamId = localStorage.getItem("selectedTeamId");
@@ -123,10 +125,15 @@ export function useLineup(): UseLineupReturn {
 
       toast.success(`${teamName} lineup has been saved successfully.`);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to save lineup"
-      );
-      console.error("Error saving lineup:", error);
+      if (error instanceof Error && error.message === "LOGIN_REQUIRED") {
+        toast.error("Please log in to save your lineup");
+        router.push(
+          `/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`
+        );
+      } else {
+        toast.error("Failed to save lineup");
+        console.error("Error saving lineup:", error);
+      }
     }
   };
 
