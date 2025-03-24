@@ -17,7 +17,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log("Received team data:", body);
 
-    // Validate with Zod
     const result = teamSchema.safeParse(body);
 
     if (!result.success) {
@@ -33,7 +32,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create team in database
     const team = await Team.create({
       ...result.data,
       userId: session.user.id,
@@ -57,9 +55,18 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
     await connectToDatabase();
 
-    const teams = await Team.find({});
+    if (!session?.user?.id) {
+      return NextResponse.json({
+        teams: [],
+        message: "Please log in to view and create teams",
+        requiresAuth: true,
+      });
+    }
+
+    const teams = await Team.find({ userId: session.user.id });
     return NextResponse.json({ success: true, teams });
   } catch (error) {
     console.error("Failed to fetch teams:", error);

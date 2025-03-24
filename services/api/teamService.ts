@@ -1,14 +1,24 @@
 import type { Team } from "@/types/team";
 
+interface TeamResponse {
+  teams: Team[];
+  requiresAuth?: boolean;
+  message?: string;
+}
+
 export const teamService = {
   async getTeams(): Promise<Team[]> {
     const response = await fetch("/api/teams");
+    const data: TeamResponse = await response.json();
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch teams");
+    if (data.requiresAuth) {
+      return [];
     }
 
-    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch teams");
+    }
+
     return data.teams || [];
   },
 
