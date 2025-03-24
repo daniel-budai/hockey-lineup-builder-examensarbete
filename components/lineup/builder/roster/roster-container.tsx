@@ -22,8 +22,6 @@ export function RosterContainer({
 }: RosterContainerProps) {
   const { searchQuery, setSearchQuery, filterTab, setFilterTab } = usePlayers();
 
-  console.log("Players in roster:", allPlayers); // Debug log
-
   const filteredPlayers = allPlayers.filter((player) => {
     const searchLower = searchQuery.toLowerCase();
     const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();

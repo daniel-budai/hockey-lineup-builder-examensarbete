@@ -57,14 +57,9 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     await connectToDatabase();
 
-    const teams = await Team.find({ userId: session.user.id });
+    const teams = await Team.find({});
     return NextResponse.json({ success: true, teams });
   } catch (error) {
     console.error("Failed to fetch teams:", error);
