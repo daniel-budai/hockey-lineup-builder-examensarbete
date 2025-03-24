@@ -17,7 +17,7 @@ interface UseLineupReturn {
   readonly setHoveredTab: (tab: LineTab | null) => void;
   readonly handleTabClick: (line: LineTab) => void;
   readonly saveLineup: (teamId: string, teamName: string) => Promise<void>;
-  readonly loadLineup: (teamId: string) => void;
+  readonly loadLineup: (teamId: string | null) => void;
   readonly isPositionValid: (player: Player, dropPosition: Position) => boolean;
 }
 
@@ -137,8 +137,11 @@ export function useLineup(): UseLineupReturn {
     }
   };
 
-  const loadLineup = (teamId: string): void => {
-    if (!teamId) return;
+  const loadLineup = (teamId: string | null): void => {
+    if (!teamId) {
+      setLineup(createEmptyLineup());
+      return;
+    }
 
     const savedLineup = localStorage.getItem(`lineup-${teamId}`);
     if (!savedLineup) {

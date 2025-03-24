@@ -7,19 +7,15 @@ interface TeamResponse {
 }
 
 export const teamService = {
-  async getTeams(): Promise<Team[]> {
+  getTeams: async (): Promise<Team[]> => {
     const response = await fetch("/api/teams");
-    const data: TeamResponse = await response.json();
+    const data = (await response.json()) as TeamResponse;
 
     if (data.requiresAuth) {
       return [];
     }
 
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to fetch teams");
-    }
-
-    return data.teams || [];
+    return data.teams;
   },
 
   async createTeam(

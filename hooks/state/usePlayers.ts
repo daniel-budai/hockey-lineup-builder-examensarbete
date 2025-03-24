@@ -38,9 +38,12 @@ interface UsePlayersReturn {
 export function usePlayers(): UsePlayersReturn {
   const [players, setPlayers] = useState<Player[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentTeamId, setCurrentTeamId] = useState<string | null>(
-    localStorage.getItem("selectedTeamId")
-  );
+  const [currentTeamId, setCurrentTeamId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("selectedTeamId");
+    }
+    return null;
+  });
 
   const {
     searchQuery,
