@@ -5,6 +5,7 @@ import type { LineupData } from "@/types/lineup";
 import type { Player } from "@/types/player";
 import type { Position } from "@/types/positions";
 import { createEmptyLineup } from "./useLineupStorage";
+import { useRouter } from "next/navigation";
 
 type LineTab = "line1" | "line2" | "line3" | "line4";
 interface UseLineupReturn {
@@ -16,11 +17,12 @@ interface UseLineupReturn {
   readonly setHoveredTab: (tab: LineTab | null) => void;
   readonly handleTabClick: (line: LineTab) => void;
   readonly saveLineup: (teamId: string, teamName: string) => Promise<void>;
-  readonly loadLineup: (teamId: string) => void;
+  readonly loadLineup: (teamId: string | null) => void;
   readonly isPositionValid: (player: Player, dropPosition: Position) => boolean;
 }
 
 export function useLineup(): UseLineupReturn {
+  const router = useRouter();
   const [lineup, setLineup] = useState<LineupData>(() => {
     try {
       const teamId = localStorage.getItem("selectedTeamId");
@@ -62,24 +64,29 @@ export function useLineup(): UseLineupReturn {
         return;
       }
 
-      if (teamId !== currentTeamId) {
-        setCurrentTeamId(teamId);
+      const lineupKey = `hockey-lineup-${teamId}`;
+      const savedKey = `saved_${lineupKey}`;
 
-        const lineupKey = `hockey-lineup-${teamId}`;
-        const savedLineup = localStorage.getItem(lineupKey);
+      const currentLineup = localStorage.getItem(lineupKey);
+      const savedLineup = localStorage.getItem(savedKey);
 
-        if (savedLineup) {
-          try {
-            const parsedLineup = JSON.parse(savedLineup) as LineupData;
-            console.log("Loading lineup from localStorage:", parsedLineup); // Debug log
-            setLineup(parsedLineup);
-          } catch (error) {
-            console.error("Error parsing saved lineup:", error);
-            setLineup(createEmptyLineup());
+      const lineupData = currentLineup || savedLineup;
+
+      if (lineupData) {
+        try {
+          const parsedLineup = JSON.parse(lineupData) as LineupData;
+          setLineup(parsedLineup);
+
+          if (!currentLineup && savedLineup) {
+            localStorage.setItem(lineupKey, lineupData);
+            localStorage.removeItem(savedKey);
           }
-        } else {
+        } catch (error) {
+          console.error("Error parsing saved lineup:", error);
           setLineup(createEmptyLineup());
         }
+      } else {
+        setLineup(createEmptyLineup());
       }
     };
 
@@ -123,15 +130,23 @@ export function useLineup(): UseLineupReturn {
 
       toast.success(`${teamName} lineup has been saved successfully.`);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to save lineup"
-      );
-      console.error("Error saving lineup:", error);
+      if (error instanceof Error && error.message === "LOGIN_REQUIRED") {
+        toast.error("Please log in to save your lineup");
+        router.push(
+          `/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`
+        );
+      } else {
+        toast.error("Failed to save lineup");
+        console.error("Error saving lineup:", error);
+      }
     }
   };
 
-  const loadLineup = (teamId: string): void => {
-    if (!teamId) return;
+  const loadLineup = (teamId: string | null): void => {
+    if (!teamId) {
+      setLineup(createEmptyLineup());
+      return;
+    }
 
     const savedLineup = localStorage.getItem(`lineup-${teamId}`);
     if (!savedLineup) {

@@ -11,10 +11,12 @@ import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginInput } from "@/schemas/auth.schema";
+import { useAuth } from "@/hooks/use-auth";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { handleLoginSuccess } = useAuth();
 
   const {
     register,
@@ -32,17 +34,13 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
       });
 
-      if (result?.error) {
-        toast.error("Invalid credentials");
-        setIsLoading(false);
-        return;
-      }
+      handleLoginSuccess();
 
       toast.success("You have been logged in successfully.");
       router.push("/dashboard");

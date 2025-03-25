@@ -14,11 +14,14 @@ export function useTeam() {
   const fetchTeams = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      const fetchedTeams = await teamService.getTeams();
+      const response = await teamService.getTeams();
+
+      // Since getTeams returns Team[], we can use it directly
+      const fetchedTeams = response;
       setTeams(fetchedTeams);
 
       const savedTeamId = localStorage.getItem("selectedTeamId");
-      if (savedTeamId) {
+      if (savedTeamId && fetchedTeams.length > 0) {
         const savedTeam = fetchedTeams.find((team) => team._id === savedTeamId);
         if (savedTeam) {
           setCurrentTeam(savedTeam);
@@ -31,12 +34,18 @@ export function useTeam() {
         const defaultTeam = fetchedTeams[0];
         setCurrentTeam(defaultTeam);
         localStorage.setItem("selectedTeamId", defaultTeam._id);
+      } else {
+        setCurrentTeam(null);
+        localStorage.removeItem("selectedTeamId");
       }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to fetch teams"
       );
       console.error(error);
+      setTeams([]);
+      setCurrentTeam(null);
+      localStorage.removeItem("selectedTeamId");
     } finally {
       setIsLoading(false);
     }

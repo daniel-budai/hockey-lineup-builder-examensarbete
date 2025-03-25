@@ -24,8 +24,14 @@ export const lineupService = {
       body: JSON.stringify(data),
     });
 
+    const responseData = await response.json();
+
+    if (response.status === 401) {
+      throw new Error("LOGIN_REQUIRED");
+    }
+
     if (!response.ok) {
-      throw new Error("Failed to save lineup");
+      throw new Error(responseData.error || "Failed to save lineup");
     }
   },
 };

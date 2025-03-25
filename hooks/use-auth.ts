@@ -1,18 +1,42 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export function useAuth() {
   const { data: session, status } = useSession();
-  const router = useRouter();
 
   const isAuthenticated = status === "authenticated";
   const isLoading = status === "loading";
 
-  const logout = async () => {
-    await signOut({ redirect: false });
-    router.push("/login");
+  const logout = () => {
+    const currentTeamId = localStorage.getItem("selectedTeamId");
+    if (currentTeamId) {
+      const lineupKey = `hockey-lineup-${currentTeamId}`;
+      const lineupData = localStorage.getItem(lineupKey);
+      if (lineupData) {
+        localStorage.setItem(`saved_${lineupKey}`, lineupData);
+      }
+
+      localStorage.removeItem(lineupKey);
+      localStorage.removeItem("selectedTeamId");
+    }
+
+    signOut();
+  };
+
+  const handleLoginSuccess = () => {
+    const savedKeys = Object.keys(localStorage).filter((key) =>
+      key.startsWith("saved_hockey-lineup-")
+    );
+
+    savedKeys.forEach((savedKey) => {
+      const originalKey = savedKey.replace("saved_", "");
+      const savedData = localStorage.getItem(savedKey);
+      if (savedData) {
+        localStorage.setItem(originalKey, savedData);
+        localStorage.removeItem(savedKey);
+      }
+    });
   };
 
   return {
@@ -20,5 +44,6 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     logout,
+    handleLoginSuccess,
   };
 }
